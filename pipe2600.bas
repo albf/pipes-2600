@@ -41,6 +41,9 @@
  dim nextIndex=u
  dim nextPlayfieldx=v
 
+ dim MissileGridX=w
+ dim MissileGridY=x
+
  ;***************************************************************
  ;
  ;  Program Start/Restart
@@ -61,6 +64,11 @@ __Start_Restart
  ;***************************************************************
  ;
  ;  Initial Playfield and player data.
+ ;
+ ; playfield: the borders and the actual pipes.
+ ; player0: user select cursor, limited by the main field
+ ; player1: next pipe cursor, indicates the next one
+ ; missile1: water head/guide, used to make it more visible
  ;
  ;***************************************************************
 
@@ -144,6 +152,57 @@ end
  score = 0
  scorecolor=30
 
+ missile1height = 2
+
+ ;***************************************************************
+ ;
+ ;  Init start and end pipes
+ ;
+ ;***************************************************************
+
+ ; lets find pieces type
+ arg4 = 3
+ gosub _rand0toN
+ arg5 = arg3
+
+ gosub _randomValidPosition
+ gosub _convertIndexToPlayfield
+
+ arg3 = arg5
+ aux_1 = arg1
+ aux_2 = arg2
+ gosub _DrawInitPipe
+
+ ; Find second and search a position until find
+ ; a free and not so close.
+
+ arg4 = 3
+ gosub _rand0toN
+ arg5 = arg3
+
+_findGoodEndPosition
+ gosub _randomValidPosition
+ gosub _convertIndexToPlayfield
+
+ if arg1 = aux_1 then goto _findGoodEndPosition
+ if arg2 = aux_2 then goto _findGoodEndPosition
+
+ arg3 = arg5
+ gosub _DrawInitPipe
+
+ ; Missile1 should be inside init pipe
+ missile1x = 26
+_missile1xInit
+ missile1x = missile1x + 4
+ aux_1 = aux_1 - 1
+ if aux_1 > 0 then goto _missile1xInit
+
+ missile1y = 8
+_missile1yInit
+ missile1y = missile1y + 3
+ aux_2 = aux_2 - 1
+ if aux_2 > 0 then goto _missile1yInit
+
  ;***************************************************************
  ;
  ;  Init next pipes
@@ -165,7 +224,6 @@ _init_pipe_loop
  aux_1 = aux_1 + 1
  aux_2 = aux_2 + 6
  if aux_1 < 5 then goto _init_pipe_loop
-
 
  ;***************************************************************
  ;
@@ -260,7 +318,7 @@ _joy0firePressed
  if arg1 > 0 then goto _joy0fireEnd
  lastMoviment = lastMoviment | %00010000
 
- gosub _converPlayerCoordinates
+ gosub _convertPlayerCoordinates
  arg3 = nextPipe[nextIndex]
  gosub _DrawPipe bank2
 
@@ -292,7 +350,7 @@ _joy0fireEnd
  COLUP0 = $AE
  COLUP1 = $EE
  NUSIZ0 = $07
- NUSIZ1 = $07
+ NUSIZ1 = $27
 
  drawscreen
 
@@ -482,28 +540,62 @@ _rand0toN_loop
 
 
  ;***************************************************************
- ; _converPlayerCoordinates Subroutine
- ; _converPlayerCoordinates will convert player to playfield position.
+ ; _convertPlayerCoordinates Subroutine
+ ; _convertPlayerCoordinates will convert player to playfield position.
  ; arg3 and arg4 get dirty, results on arg1 and arg2, to avoid copy
  ;***************************************************************
 
-_converPlayerCoordinates
+_convertPlayerCoordinates
  arg3 = player0x
  arg4 = player0y
  arg1 = 1
  arg2 = 1
-_converPlayerCoordinates_Loop1
- if arg3 < 10 then goto _converPlayerCoordinates_Loop2
+_convertPlayerCoordinates_Loop1
+ if arg3 < 10 then goto _convertPlayerCoordinates_Loop2
  arg1 = arg1 + 5
  arg3 = arg3 - 20
- goto _converPlayerCoordinates_Loop1
+ goto _convertPlayerCoordinates_Loop1
 
-_converPlayerCoordinates_Loop2
+_convertPlayerCoordinates_Loop2
  if arg4 < 20 then return
  arg4 = arg4 - 15
  arg2 = arg2 + 5
- goto _converPlayerCoordinates_Loop2
+ goto _convertPlayerCoordinates_Loop2
 
+
+
+ ;***************************************************************
+ ; _randomValidPosition Subroutine
+ ; finds a valid init pipe based on arg3 value,
+ ; return on arg1 (x) and arg2(y), arg4 is dirty.
+ ;***************************************************************
+
+_randomValidPosition
+_randomValidPositionGetX
+ arg4 = 6
+ gosub _rand0toN
+ if arg5 = 3 && arg3 = 5 then goto _randomValidPositionGetX
+ if arg5 = 1 && arg3 = 0 then goto _randomValidPositionGetX
+ arg1 = arg3
+_randomValidPositionGetY
+ arg4 = 5
+ gosub _rand0toN
+ if arg5 = 0 && arg3 = 4 then goto _randomValidPositionGetY
+ if arg5 = 2 && arg3 = 0 then goto _randomValidPositionGetY
+ arg2 = arg3
+ return
+
+
+
+ ;***************************************************************
+ ; _convertIndexToPlayfield Subroutine
+ ; Just converts arg1(x) and arg(2) for later call to DrawPipe
+ ;***************************************************************
+
+_convertIndexToPlayfield
+ arg1 = (arg1*5)+1
+ arg2 = (arg2*5)+1
+ return
 
 
  ;***************************************************************
