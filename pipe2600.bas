@@ -96,6 +96,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 X.....X.....X.....X.....X.....X.
 X.....X.....X.....X.....X.....X.
 X.....X.....X.....X.....X.....X.
+................................
 end
 
  COLUPF = $92
@@ -139,6 +140,9 @@ end
  player0y=18
  player1x=8
  player1y=94
+
+ score = 0
+ scorecolor=30
 
  ;***************************************************************
  ;
@@ -257,9 +261,8 @@ _joy0firePressed
  lastMoviment = lastMoviment | %00010000
 
  gosub _converPlayerCoordinates
- arg3 = nextPipe[nextPlayfieldx]
+ arg3 = nextPipe[nextIndex]
  gosub _DrawPipe bank2
-
 
  ; Update nextIndex and nextPipe
  arg4 = 7
@@ -316,19 +319,19 @@ _DrawMiniPipe
 ; .X.
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
-
- arg1 = arg1 + 1
- pfpixel arg1 arg2 off
- arg4 = arg2 + 1
- pfpixel arg1 arg4 on
- arg4 = arg4 + 1
  pfpixel arg1 arg4 off
+
+ arg1 = arg1 + 1
+ pfpixel arg1 arg2 on
+ arg4 = arg2 + 1
+ pfpixel arg1 arg4 on
+ arg4 = arg4 + 1
+ pfpixel arg1 arg4 on
  arg4 = arg4 + 1
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ pfpixel arg1 arg4 off
  return
 
 _DrawMiniPipe_not0
@@ -338,14 +341,14 @@ _DrawMiniPipe_not0
 ; ...
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ pfpixel arg1 arg4 on
 
  arg1 = arg1 + 1
- pfpixel arg1 arg2 on
+ pfpixel arg1 arg2 off
  arg4 = arg2 + 1
  pfpixel arg1 arg4 on
  arg4 = arg4 + 1
- pfpixel arg1 arg4 on
+ pfpixel arg1 arg4 off
  arg4 = arg4 + 1
 
  arg1 = arg1 + 1
@@ -382,19 +385,19 @@ _DrawMiniPipe_not2
 ; .X.
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ pfpixel arg1 arg4 on
 
  arg1 = arg1 + 1
- pfpixel arg1 arg2 on
+ pfpixel arg1 arg2 off
  arg4 = arg2 + 1
  pfpixel arg1 arg4 on
  arg4 = arg4 + 1
- pfpixel arg1 arg4 off
+ pfpixel arg1 arg4 on
  arg4 = arg4 + 1
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ pfpixel arg1 arg4 off
  return
 
 _DrawMiniPipe_not3
@@ -426,19 +429,19 @@ _DrawMiniPipe_not4
 ; ...
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
-
- arg1 = arg1 + 1
- pfpixel arg1 arg2 off
- arg4 = arg2 + 1
- pfpixel arg1 arg4 on
- arg4 = arg4 + 1
- pfpixel arg1 arg4 on
- arg4 = arg4 + 1
-
- arg1 = arg1 + 1
- arg4 = arg2 + 1
  pfpixel arg1 arg4 off
+
+ arg1 = arg1 + 1
+ pfpixel arg1 arg2 on
+ arg4 = arg2 + 1
+ pfpixel arg1 arg4 on
+ arg4 = arg4 + 1
+ pfpixel arg1 arg4 off
+ arg4 = arg4 + 1
+
+ arg1 = arg1 + 1
+ arg4 = arg2 + 1
+ pfpixel arg1 arg4 on
  return
 
 _DrawMiniPipe_not5
@@ -503,10 +506,99 @@ _converPlayerCoordinates_Loop2
 
 
 
+ ;***************************************************************
+ ; _DrawInitPipe Subroutine
+ ; Draws a start pipe starting on x,y pointed by arg1 and arg2
+ ; and arg3 as type, where 0,1,2,3 are valid values. It expects a
+ ; previously clean playfield.
+ ; Only arg1, arg2 and arg3 get dirty.
+ ;***************************************************************
+
+_DrawInitPipe
+ if arg3 > 0 then goto _DrawInitPipe_not0
+; .....
+; .XXX.
+; .X.X.
+; .X.X.
+; .X.X.
+
+ arg2 = arg2 + 1
+ arg1 = arg1 + 1
+ arg3 = arg2 + 3
+ pfvline arg1 arg2 arg3 on
+
+ arg1 = arg1 + 1
+ pfpixel arg1 arg2 on
+
+ arg1 = arg1 + 1
+ pfvline arg1 arg2 arg3 on
+ return
+
+_DrawInitPipe_not0
+ if arg3 > 1 then goto _DrawInitPipe_not1
+; .....
+; XXXX.
+; ...X.
+; XXXX.
+; .....
+
+ arg2 = arg2 + 1
+ arg3 = arg1 + 3
+ pfhline arg1 arg2 arg3 on
+
+ arg2 = arg2 + 2
+ pfhline arg1 arg2 arg3 on
+
+ arg2 = arg2 - 1
+ arg1 = arg1 + 3
+ pfpixel arg1 arg2 on
+ return
+
+_DrawInitPipe_not1
+ if arg3 > 2 then goto _DrawInitPipe_not2
+; .X.X.
+; .X.X.
+; .X.X.
+; .XXX.
+; .....
+
+ arg1 = arg1 + 1
+ arg3 = arg2 + 3
+ pfvline arg1 arg2 arg3 on
+
+ arg1 = arg1 + 2
+ pfvline arg1 arg2 arg3 on
+
+ arg1 = arg1 - 1
+ arg2 = arg2 + 3
+ pfpixel arg1 arg2 on
+ return
+
+_DrawInitPipe_not2
+; If not2, must be 3
+; .....
+; .XXXX
+; .X...
+; .XXXX
+; .....
+
+ arg1 = arg1 + 1
+ arg2 = arg2 + 1
+ arg3 = arg1 + 3
+ pfhline arg1 arg2 arg3 on
+
+ arg2 = arg2 + 2
+ pfhline arg1 arg2 arg3 on
+
+ arg2 = arg2 - 1
+ pfpixel arg1 arg2 on
+ return
+
+
  bank 2
 
  ;***************************************************************
- ; DrawPipe Subroutine
+ ; _DrawPipe Subroutine
  ; Draws a non-start pipe starting on x,y pointed by arg1 and arg2
  ; and arg3 as type, where 0,1,2,3,4,5,6 are valid values.
  ; arg4 and arg5 get dirty.
