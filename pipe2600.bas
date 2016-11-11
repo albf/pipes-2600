@@ -41,8 +41,9 @@
  dim nextIndex=u
  dim nextPlayfieldx=v
 
- dim MissileGridX=w
- dim MissileGridY=x
+ dim waterHeadX=w
+ dim waterHeadY=x
+ dim waterDirection=z
 
  ;***************************************************************
  ;
@@ -163,12 +164,12 @@ end
  ; lets find pieces type
  arg4 = 3
  gosub _rand0toN
- arg5 = arg3
+ waterDirection = arg3
 
  gosub _randomValidPosition
  gosub _convertIndexToPlayfield
 
- arg3 = arg5
+ arg3 = waterDirection
  aux_1 = arg1
  aux_2 = arg2
  gosub _DrawInitPipe
@@ -190,18 +191,13 @@ _findGoodEndPosition
  arg3 = arg5
  gosub _DrawInitPipe
 
- ; Missile1 should be inside init pipe
- missile1x = 26
-_missile1xInit
- missile1x = missile1x + 4
- aux_1 = aux_1 - 1
- if aux_1 > 0 then goto _missile1xInit
+ ; Water starts on the middle of the starting pipe
+ waterHeadX = aux_1 + 2
+ waterHeadY = aux_2 + 2
+ pfpixel waterHeadX waterHeadY on
 
- missile1y = 8
-_missile1yInit
- missile1y = missile1y + 3
- aux_2 = aux_2 - 1
- if aux_2 > 0 then goto _missile1yInit
+ ; Also print missile at water head start
+ gosub _UpdateWaterMissile
 
  ;***************************************************************
  ;
@@ -316,6 +312,7 @@ _joy0rightEnd
 _joy0firePressed
  arg1 = lastMoviment & %00010000
  if arg1 > 0 then goto _joy0fireEnd
+ gosub _FlowWater
  lastMoviment = lastMoviment | %00010000
 
  gosub _convertPlayerCoordinates
@@ -525,6 +522,96 @@ _DrawMiniPipe_not5
  return
 
 
+
+ ;***************************************************************
+ ; _FlowWater Subroutine
+ ; _FlowWater will flow the water one step. It should only be called
+ ; when it's time.
+ ;***************************************************************
+
+_FlowWater
+ ; First check for waterDirection change or fail
+ arg4 = 0
+
+ arg5 = waterHeadY + 1
+ if pfread(waterHeadX, arg5) then goto _FlowWater_notDown
+ arg4 = arg4 + 1
+ waterDirection = 0
+
+_FlowWater_notDown
+ arg5 = waterHeadX - 1
+ if pfread(arg5, waterHeadY) then goto _FlowWater_notLeft
+ arg4 = arg4 + 1
+ waterDirection = 1
+
+_FlowWater_notLeft
+ arg5 = waterHeadY - 1
+ if pfread(waterHeadX, arg5) then goto _FlowWater_notUp
+ arg4 = arg4 + 1
+ waterDirection = 2
+
+_FlowWater_notUp
+ arg5 = waterHeadX + 1
+ if pfread(arg5, waterHeadY) then goto _FlowWater_notRight
+ arg4 = arg4 + 1
+ waterDirection = 3
+
+_FlowWater_notRight
+
+ if arg4 = 1 then goto _FlowWater_move
+ ; In here, must check if dead, on the double pipe or completed
+
+_FlowWater_move
+
+ if waterDirection > 0 then goto _FlowWater_not0
+ waterHeadY = waterHeadY + 1
+ goto _FlowWater_Continue
+
+_FlowWater_not0
+ if waterDirection > 1 then goto _FlowWater_not1
+ waterHeadX = waterHeadX - 1
+ goto _FlowWater_Continue
+
+_FlowWater_not1
+ if waterDirection > 2 then goto _FlowWater_not2
+ waterHeadY = waterHeadY - 1
+ goto _FlowWater_Continue
+
+_FlowWater_not2
+ waterHeadX = waterHeadX + 1
+
+_FlowWater_Continue
+ pfpixel waterHeadX waterHeadY on
+ gosub _UpdateWaterMissile
+
+ return
+
+
+
+ ;***************************************************************
+ ; _UpdateWaterMissile Subroutine
+ ; _UpdateWaterMissile will draw missile on coordinates equivalent
+ ; to waterHeadX and waterHeadY. Only arg5 gets dirty.
+ ;***************************************************************
+
+_UpdateWaterMissile
+ arg5 = waterHeadX
+ missile1x = 18
+_missile1xInit
+ missile1x = missile1x + 4
+ arg5 = arg5 - 1
+ if arg5 > 0 then goto _missile1xInit
+
+ arg5 = waterHeadY
+ missile1y = 2
+_missile1yInit
+ missile1y = missile1y + 3
+ arg5 = arg5 - 1
+ if arg5 > 0 then goto _missile1yInit
+ return
+
+
+
  ;***************************************************************
  ; _rand0toN Subroutine
  ; _rand0toN will get a random number from 0 up to arg4-1
@@ -596,6 +683,7 @@ _convertIndexToPlayfield
  arg1 = (arg1*5)+1
  arg2 = (arg2*5)+1
  return
+
 
 
  ;***************************************************************
