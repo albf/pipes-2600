@@ -24,13 +24,13 @@
  dim aux_1=h
  dim aux_2=i
 
- dim hasWater=j
- dim hasWater_1=j
- dim hasWater_2=k
- dim hasWater_3=l
- dim hasWater_4=m
- dim hasWater_5=n
- dim hasWater_6=o
+ dim isLocked=j
+ dim isLocked_1=j
+ dim isLocked_2=k
+ dim isLocked_3=l
+ dim isLocked_4=m
+ dim isLocked_5=n
+ dim isLocked_6=o
 
  dim nextPipe=p
  dim nextPipe_1=p
@@ -44,24 +44,38 @@
 
  dim waterHeadX=w
  dim waterHeadY=x
- dim waterDirection=z
+ dim waterDirection=y
+
+ dim waterTime1 = z
+ dim waterTime2 = var0
+ dim waterFlowTime2 = var1
 
  ;***************************************************************
  ;
  ;  Program Start/Restart
  ;
  ;***************************************************************
-__Start_Restart
+__StartRestart
  drawscreen
 
  ;***************************************************************
  ;
- ;  Clears all normal variables and the extra 9 (fastest way).
+ ;  Clear variables for the reset case
  ;
  ;***************************************************************
- a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : f = 0 : g = 0 : h = 0 : i = 0
- j = 0 : k = 0 : l = 0 : m = 0 : n = 0 : o = 0 : p = 0 : q = 0 : r = 0
- s = 0 : t = 0 : u = 0 : v = 0 : w = 0 : x = 0 : y = 0 : z = 0
+ lastMoviment = 0
+ score = 0
+ scorecolor= 30
+
+__StartLevel
+ ;***************************************************************
+ ;
+ ;  Clear level variables
+ ;
+ ;***************************************************************
+ nextIndex = 0 : nextPlayfieldx = 2
+ isLocked_1 = 0 : isLocked_2 = 0 : isLocked_3 = 0
+ isLocked_4 = 0 : isLocked_5 = 0 : isLocked_6 = 0
 
  ;***************************************************************
  ;
@@ -151,9 +165,6 @@ end
  player1x=8
  player1y=94
 
- score = 0
- scorecolor=30
-
  missile1height = 2
 
  ;***************************************************************
@@ -227,7 +238,6 @@ _findGoodEndPositionD
  ;***************************************************************
  aux_1 = 0
  aux_2 = 2
- nextPlayfieldx = 2
 
 _init_pipe_loop
  arg4 = 7
@@ -362,6 +372,23 @@ _nextPipeOnRight
 
 _joy0fireEnd
 
+
+
+ ; Handle switchreset input
+
+ if switchreset then goto _resetPressed
+
+ lastMoviment = lastMoviment & %11011111
+ goto _resetEnd
+
+_resetPressed
+ arg1 = lastMoviment & %00100000
+ if arg1 > 0 then goto _resetEnd
+
+ lastMoviment = lastMoviment | %00100000
+ goto __StartRestart
+
+_resetEnd
 
 
  ; Color and Resize of player0 sprite
