@@ -19,9 +19,10 @@
  dim arg3=d
  dim arg4=e
  dim arg5=f
+ dim arg6=g
 
- dim aux_1=g
- dim aux_2=h
+ dim aux_1=h
+ dim aux_2=i
 
  dim hasWater=j
  dim hasWater_1=j
@@ -165,6 +166,7 @@ end
  arg4 = 3
  gosub _rand0toN
  waterDirection = arg3
+ arg5 = arg3
 
  gosub _randomValidPosition
  gosub _convertIndexToPlayfield
@@ -185,8 +187,27 @@ _findGoodEndPosition
  gosub _randomValidPosition
  gosub _convertIndexToPlayfield
 
+ ; Start and finish shouldn't be on same line or column
+
  if arg1 = aux_1 then goto _findGoodEndPosition
  if arg2 = aux_2 then goto _findGoodEndPosition
+
+ ; Also, shouldn't be closes diagonal
+ ; Don't forget: pipes are separated by 5 playfied pixels
+ arg4 = aux_1 - 5
+ arg6 = aux_2 - 5
+ if arg1 = arg4 && arg2 = arg6 then goto _findGoodEndPosition
+
+ arg6 = aux_2 + 5
+ if arg1 = arg4 && arg2 = arg6 then goto _findGoodEndPosition
+
+ arg4 = aux_1 + 5
+ if arg1 = arg4 && arg2 = arg6 then goto _findGoodEndPosition
+
+ arg6 = aux_2 - 5
+ if arg1 = arg4 && arg2 = arg6 then goto _findGoodEndPosition
+
+_findGoodEndPositionD
 
  arg3 = arg5
  gosub _DrawInitPipe
@@ -653,7 +674,7 @@ _convertPlayerCoordinates_Loop2
 
  ;***************************************************************
  ; _randomValidPosition Subroutine
- ; finds a valid init pipe based on arg3 value,
+ ; finds a valid init pipe based on arg5 value,
  ; return on arg1 (x) and arg2(y), arg4 is dirty.
  ;***************************************************************
 
@@ -669,6 +690,17 @@ _randomValidPositionGetY
  gosub _rand0toN
  if arg5 = 0 && arg3 = 4 then goto _randomValidPositionGetY
  if arg5 = 2 && arg3 = 0 then goto _randomValidPositionGetY
+
+ ; Check for bad placed, that might be closed for the other end
+ if arg5 = 0 && arg1 = 0 && arg3 = 3 then goto _randomValidPositionGetX
+ if arg5 = 0 && arg1 = 5 && arg3 = 3 then goto _randomValidPositionGetX
+ if arg5 = 1 && arg1 = 1 && arg3 = 0 then goto _randomValidPositionGetX
+ if arg5 = 1 && arg1 = 1 && arg3 = 4 then goto _randomValidPositionGetX
+ if arg5 = 2 && arg1 = 0 && arg3 = 1 then goto _randomValidPositionGetX
+ if arg5 = 2 && arg1 = 5 && arg3 = 1 then goto _randomValidPositionGetX
+ if arg5 = 3 && arg1 = 4 && arg3 = 0 then goto _randomValidPositionGetX
+ if arg5 = 3 && arg1 = 4 && arg3 = 4 then goto _randomValidPositionGetX
+
  arg2 = arg3
  return
 
