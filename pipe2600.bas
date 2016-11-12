@@ -1,10 +1,10 @@
  ;****************************************************************
  ;
- ; Stardard Kernel with 16k (4 banks) and SuperChip
+ ; Stardard Kernel with 8k (2 banks) and SuperChip
  ;
  ;***************************************************************
  set kernel_options no_blank_lines
- set romsize 16kSC
+ set romsize 8kSC
  const pfres=32
 
  ;***************************************************************
@@ -66,6 +66,7 @@ __StartRestart
  lastMoviment = 0
  score = 0
  scorecolor= 30
+ waterFlowTime2 = 2
 
 __StartLevel
  ;***************************************************************
@@ -76,6 +77,7 @@ __StartLevel
  nextIndex = 0 : nextPlayfieldx = 2
  isLocked_1 = 0 : isLocked_2 = 0 : isLocked_3 = 0
  isLocked_4 = 0 : isLocked_5 = 0 : isLocked_6 = 0
+ waterTime1 = 0 : waterTime2 = 0
 
  ;***************************************************************
  ;
@@ -179,13 +181,13 @@ end
  waterDirection = arg3
  arg5 = arg3
 
- gosub _randomValidPosition
+ gosub _randomValidPosition bank2
  gosub _convertIndexToPlayfield
 
  arg3 = waterDirection
  aux_1 = arg1
  aux_2 = arg2
- gosub _DrawInitPipe
+ gosub _DrawInitPipe bank2
 
  ; Find second and search a position until find
  ; a free and not so close.
@@ -195,7 +197,7 @@ end
  arg5 = arg3
 
 _findGoodEndPosition
- gosub _randomValidPosition
+ gosub _randomValidPosition bank2
  gosub _convertIndexToPlayfield
 
  ; Start and finish shouldn't be on same line or column
@@ -221,7 +223,7 @@ _findGoodEndPosition
 _findGoodEndPositionD
 
  arg3 = arg5
- gosub _DrawInitPipe
+ gosub _DrawInitPipe bank2
 
  ; Water starts on the middle of the starting pipe
  waterHeadX = aux_1 + 2
@@ -343,7 +345,6 @@ _joy0rightEnd
 _joy0firePressed
  arg1 = lastMoviment & %00010000
  if arg1 > 0 then goto _joy0fireEnd
- gosub _FlowWater
  lastMoviment = lastMoviment | %00010000
 
  gosub _convertPlayerCoordinates
@@ -390,6 +391,13 @@ _resetPressed
 
 _resetEnd
 
+
+
+ gosub _updateWaterTime
+ if arg6 = 0 then goto _timeEnd
+ gosub _FlowWater
+
+_timeEnd
 
  ; Color and Resize of player0 sprite
  COLUP0 = $AE
@@ -572,6 +580,27 @@ _DrawMiniPipe_not5
 
 
  ;***************************************************************
+ ; _updateWaterTime Subroutine
+ ; _updateWaterTime will update time variables and return the state
+ ; on arg6. It could be:
+ ; 0: Nothing
+ ; 1: Flow water
+ ;***************************************************************
+
+_updateWaterTime
+ arg6 = 0
+ if waterTime1 = 255 then goto _updateWaterTime_Time2
+ waterTime1 = waterTime1 + 1
+ return
+_updateWaterTime_Time2
+ waterTime2 = waterTime2 + 1
+ if waterTime2 < waterFlowTime2 then return
+ arg6 = 1
+ return
+
+
+
+ ;***************************************************************
  ; _FlowWater Subroutine
  ; _FlowWater will flow the water one step. It should only be called
  ; when it's time.
@@ -700,6 +729,20 @@ _convertPlayerCoordinates_Loop2
 
 
  ;***************************************************************
+ ; _convertIndexToPlayfield Subroutine
+ ; Just converts arg1(x) and arg(2) for later call to DrawPipe
+ ;***************************************************************
+
+_convertIndexToPlayfield
+ arg1 = (arg1*5)+1
+ arg2 = (arg2*5)+1
+ return
+
+
+
+ bank 2
+
+ ;***************************************************************
  ; _randomValidPosition Subroutine
  ; finds a valid init pipe based on arg5 value,
  ; return on arg1 (x) and arg2(y), arg4 is dirty.
@@ -708,13 +751,13 @@ _convertPlayerCoordinates_Loop2
 _randomValidPosition
 _randomValidPositionGetX
  arg4 = 6
- gosub _rand0toN
+ gosub _rand0toN_bank2
  if arg5 = 3 && arg3 = 5 then goto _randomValidPositionGetX
  if arg5 = 1 && arg3 = 0 then goto _randomValidPositionGetX
  arg1 = arg3
 _randomValidPositionGetY
  arg4 = 5
- gosub _rand0toN
+ gosub _rand0toN_bank2
  if arg5 = 0 && arg3 = 4 then goto _randomValidPositionGetY
  if arg5 = 2 && arg3 = 0 then goto _randomValidPositionGetY
 
@@ -734,14 +777,16 @@ _randomValidPositionGetY
 
 
  ;***************************************************************
- ; _convertIndexToPlayfield Subroutine
- ; Just converts arg1(x) and arg(2) for later call to DrawPipe
+ ; _rand0toN_bank2 Subroutine
+ ; A copy of _rand0toN for performance/size reasons
  ;***************************************************************
 
-_convertIndexToPlayfield
- arg1 = (arg1*5)+1
- arg2 = (arg2*5)+1
- return
+_rand0toN_bank2
+ arg3 = rand
+_rand0toN_bank2_loop
+ if arg3 < arg4 then return
+ arg3 = arg3 - arg4
+ goto _rand0toN_bank2_loop
 
 
 
@@ -834,7 +879,6 @@ _DrawInitPipe_not2
  return
 
 
- bank 2
 
  ;***************************************************************
  ; _DrawPipe Subroutine
@@ -862,29 +906,29 @@ _DrawPipe
 ; .X.X.
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off
  arg4 = arg4 + 2
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off
 
  arg1 = arg1 + 1
  arg4 = arg2 + 4
- pfvline arg1 arg2 arg4 on
+ gosub _pfvline_arg1_arg2_arg4_on
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off
  arg4 = arg4 + 2
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off
 
  arg1 = arg1 + 1
  arg4 = arg2 + 4
- pfvline arg1 arg2 arg4 on
+ gosub _pfvline_arg1_arg2_arg4_on
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off
  arg4 = arg4 + 2
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off
  return
 
 _DrawPipe_not0
@@ -896,29 +940,29 @@ _DrawPipe_not0
 ; .....
 
  arg4 = arg1 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 2
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
  arg4 = arg1 + 4
- pfhline arg1 arg2 arg4 on
+ gosub _pfhline_arg1_arg2_arg4_on
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 2
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
  arg4 = arg1 + 4
- pfhline arg1 arg2 arg4 on
+ gosub _pfhline_arg1_arg2_arg4_on
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 2
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  return
 
 _DrawPipe_not1
@@ -930,29 +974,29 @@ _DrawPipe_not1
 ; .X.X.
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on
  arg4 = arg4 + 2
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on
 
  arg1 = arg1 + 1
  arg4 = arg2 + 4
- pfvline arg1 arg2 arg4 on
+ gosub _pfvline_arg1_arg2_arg4_on
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on
  arg4 = arg4 + 2
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on
 
  arg1 = arg1 + 1
  arg4 = arg2 + 4
- pfvline arg1 arg2 arg4 on
+ gosub _pfvline_arg1_arg2_arg4_on
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on
  arg4 = arg4 + 2
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on
  return
 
 _DrawPipe_not2
@@ -964,38 +1008,38 @@ _DrawPipe_not2
 ; .X.X.
 
  arg4 = arg1 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 2
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
  arg4 = arg1 + 3
- pfhline arg1 arg2 arg4 on
+ gosub _pfhline_arg1_arg2_arg4_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 2
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
 
  arg2 = arg2 + 1
  pfpixel arg1 arg2 on
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 2
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  return
 
 _DrawPipe_not3
@@ -1007,38 +1051,38 @@ _DrawPipe_not3
 ; .....
 
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 2
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
 
  arg2 = arg2 + 1
  pfpixel arg1 arg2 on
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 2
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
 
  arg2 = arg2 + 1
  arg4 = arg1 + 3
- pfhline arg1 arg2 arg4 on
+ gosub _pfhline_arg1_arg2_arg4_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 2
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  return
 
 _DrawPipe_not4
@@ -1050,38 +1094,38 @@ _DrawPipe_not4
 ; .....
 
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 2
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
 
  arg2 = arg2 + 1
- pfpixel arg1 arg2 off
+ gosub _pfpixel_arg1_arg2_off
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 2
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
- pfpixel arg1 arg2 off
+ gosub _pfpixel_arg1_arg2_off
  arg5 = arg1 + 1
  arg4 = arg1 + 4
  pfhline arg5 arg2 arg4 on
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 2
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  return
 
 _DrawPipe_not5
@@ -1093,40 +1137,64 @@ _DrawPipe_not5
 ; .X.X.
 
  arg4 = arg1 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 2
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
- pfpixel arg1 arg2 off
+ gosub _pfpixel_arg1_arg2_off
  arg4 = arg1 + 4
  arg5 = arg1 + 1
  pfhline arg5 arg2 arg4 on
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 2
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
 
  arg2 = arg2 + 1
- pfpixel arg1 arg2 off
+ gosub _pfpixel_arg1_arg2_off
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 off
+ gosub _pfpixel_arg4_arg2_off
  arg4 = arg4 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
 
  arg2 = arg2 + 1
  arg4 = arg1 + 1
- pfpixel arg4 arg2 on
+ gosub _pfpixel_arg4_arg2_on
  arg4 = arg4 + 2
+ gosub _pfpixel_arg4_arg2_on
+ return
+
+_pfpixel_arg4_arg2_off
+ pfpixel arg4 arg2 off
+ return
+
+_pfpixel_arg4_arg2_on
  pfpixel arg4 arg2 on
  return
 
- bank 3
+_pfpixel_arg1_arg4_on
+ pfpixel arg1 arg4 on
+ return
 
- bank 4
+_pfvline_arg1_arg2_arg4_on
+ pfvline arg1 arg2 arg4 on
+ return
+
+_pfhline_arg1_arg2_arg4_on
+ pfhline arg1 arg2 arg4 on
+ return
+
+_pfpixel_arg1_arg2_off
+ pfpixel arg1 arg2 off
+ return
+
+_pfpixel_arg1_arg4_off
+ pfpixel arg1 arg4 off
+ return
