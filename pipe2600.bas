@@ -7,37 +7,28 @@
  set romsize 8kSC
  const pfres=32
 
+
+
  ;***************************************************************
  ;
  ;  Aliases/Definitions
  ;
  ;***************************************************************
+
  dim lastMoviment=a
 
- dim arg1=b
- dim arg2=c
- dim arg3=d
- dim arg4=e
- dim arg5=f
- dim arg6=g
+ dim arg1=b : dim arg2=c : dim arg3=d
+ dim arg4=e : dim arg5=f : dim arg6=g
 
- dim aux_1=h
- dim aux_2=i
+ dim aux_1=h : dim aux_2=i
 
  dim isLocked=j
- dim isLocked_1=j
- dim isLocked_2=k
- dim isLocked_3=l
- dim isLocked_4=m
- dim isLocked_5=n
- dim isLocked_6=o
+ dim isLocked_1=j : dim isLocked_2=k : dim isLocked_3=l
+ dim isLocked_4=m : dim isLocked_5=n : dim isLocked_6=o
 
  dim nextPipe=p
- dim nextPipe_1=p
- dim nextPipe_2=q
- dim nextPipe_3=r
- dim nextPipe_4=s
- dim nextPipe_5=t
+ dim nextPipe_1=p : dim nextPipe_2=q : dim nextPipe_3=r
+ dim nextPipe_4=s : dim nextPipe_5=t
 
  dim nextIndex=u
  dim nextPlayfieldx=v
@@ -46,38 +37,41 @@
  dim waterHeadY=x
  dim waterDirection=y
 
- dim waterTime1 = z
- dim waterTime2 = var0
+ dim waterTime1 = z : dim waterTime2 = var0
  dim waterFlowTime2 = var1
+
+
 
  ;***************************************************************
  ;
- ;  Program Start/Restart
+ ;  Start/Restart: Clear variables for the reset case
  ;
  ;***************************************************************
+
 __StartRestart
  drawscreen
 
- ;***************************************************************
- ;
- ;  Clear variables for the reset case
- ;
- ;***************************************************************
  lastMoviment = 0
  score = 0
  scorecolor= 30
  waterFlowTime2 = 2
 
+
+
+ ;***************************************************************
+ ;
+ ;  Start Level: Clear level variables
+ ;
+ ;***************************************************************
+
 __StartLevel
- ;***************************************************************
- ;
- ;  Clear level variables
- ;
- ;***************************************************************
+
  nextIndex = 0 : nextPlayfieldx = 2
  isLocked_1 = 0 : isLocked_2 = 0 : isLocked_3 = 0
  isLocked_4 = 0 : isLocked_5 = 0 : isLocked_6 = 0
  waterTime1 = 0 : waterTime2 = 0
+
+
 
  ;***************************************************************
  ;
@@ -169,6 +163,8 @@ end
 
  missile1height = 2
 
+
+
  ;***************************************************************
  ;
  ;  Init start and end pipes
@@ -233,11 +229,14 @@ _findGoodEndPositionD
  ; Also print missile at water head start
  gosub _UpdateWaterMissile
 
+
+
  ;***************************************************************
  ;
  ;  Init next pipes
  ;
  ;***************************************************************
+
  aux_1 = 0
  aux_2 = 2
 
@@ -254,12 +253,16 @@ _init_pipe_loop
  aux_2 = aux_2 + 6
  if aux_1 < 5 then goto _init_pipe_loop
 
+
+
  ;***************************************************************
  ;
  ;  Main Loop
  ;
  ;***************************************************************
+
 __Main_Loop
+
  ; Handle joy0down input
 
  if joy0down then goto _joy0downPressed
