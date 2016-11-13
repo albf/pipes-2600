@@ -36,9 +36,10 @@
  dim waterHeadX=w
  dim waterHeadY=x
  dim waterDirection=y
+ dim waterOnDoublePipe=z
 
- dim waterTime1 = z : dim waterTime2 = var0
- dim waterFlowTime2 = var1
+ dim waterTime1 = var0 : dim waterTime2 = var1
+ dim waterFlowTime1 = var2 : dim waterFlowTime2 = var3
 
 
 
@@ -54,7 +55,8 @@ __StartRestart
  lastMoviment = 0
  score = 0
  scorecolor= 30
- waterFlowTime2 = 2
+ waterFlowTime1 = 45
+ waterFlowTime2 = 0
 
 
 
@@ -69,6 +71,7 @@ __StartLevel
  nextIndex = 0 : nextPlayfieldx = 2
  isLocked_1 = 0 : isLocked_2 = 0 : isLocked_3 = 0
  isLocked_4 = 0 : isLocked_5 = 0 : isLocked_6 = 0
+ waterOnDoublePipe = 0
  waterTime1 = 0 : waterTime2 = 0
 
 
@@ -216,7 +219,6 @@ _findGoodEndPosition
  arg6 = aux_2 - 5
  if arg1 = arg4 && arg2 = arg6 then goto _findGoodEndPosition
 
-_findGoodEndPositionD
 
  arg3 = arg5
  gosub _DrawInitPipe bank2
@@ -399,6 +401,11 @@ _resetEnd
  gosub _updateWaterTime
  if arg6 = 0 then goto _timeEnd
  gosub _FlowWater
+ if arg6 = 0 then goto _timeEnd
+
+ if arg6 = 1 then score = 0
+ if arg6 = 2 then score = score + 100
+ goto __StartLevel
 
 _timeEnd
 
@@ -594,10 +601,16 @@ _updateWaterTime
  arg6 = 0
  if waterTime1 = 255 then goto _updateWaterTime_Time2
  waterTime1 = waterTime1 + 1
- return
+ goto _updateWaterTime_Check
+
 _updateWaterTime_Time2
+ waterTime1 = 0
  waterTime2 = waterTime2 + 1
- if waterTime2 < waterFlowTime2 then return
+
+_updateWaterTime_Check
+ if waterTime1 < waterFlowTime1 || waterTime2 < waterFlowTime2 then return
+ waterTime1 = 0
+ waterTime2 = 0
  arg6 = 1
  return
 
@@ -606,11 +619,20 @@ _updateWaterTime_Time2
  ;***************************************************************
  ; _FlowWater Subroutine
  ; _FlowWater will flow the water one step. It should only be called
- ; when it's time.
+ ; when it is time. Returns on arg6 the result:
+ ; 0: ok, flowed flawlessly
+ ; 1: dead. No valid pipe combination.
+ ; 2: level finished
+ ; arg4 and arg5 gets dirty.
  ;***************************************************************
 
 _FlowWater
- ; First check for waterDirection change or fail
+ arg6 = 0
+
+ ; First, check if passing by a pipe
+ if waterOnDoublePipe > 0 then waterOnDoublePipe = waterOnDoublePipe - 1 : goto _FlowWater_move
+
+ ; Check for waterDirection change or fail
  arg4 = 0
 
  arg5 = waterHeadY + 1
@@ -640,6 +662,28 @@ _FlowWater_notRight
 
  if arg4 = 1 then goto _FlowWater_move
  ; In here, must check if dead, on the double pipe or completed
+ arg6 = 1
+
+ ; If not 0 and not 1, a free place. Death.
+ if arg4 <> 0 then return
+
+ ; Else, must use Y or X (depending on waterDirection) and get %5
+ if waterDirection = 0 || waterDirection = 2 then arg5 = waterHeadY else arg5 = waterHeadX
+_FlowWater_remainderInit
+ if arg5 > 4 then arg5 = arg5 - 5 else goto _FlowWater_remainderDone
+ goto _FlowWater_remainderInit
+_FlowWater_remainderDone
+
+ ; If reminder is 3, level is finished.
+ if arg5 = 3 then arg6 = 2 : return
+
+ ; Dead if not one of double pipe cases
+ if waterDirection = 0 && arg5 <> 1 then return
+ if waterDirection = 1 && arg5 <> 0 then return
+ if waterDirection = 2 && arg5 <> 0 then return
+ if waterDirection = 3 && arg5 <> 1 then return
+
+ waterOnDoublePipe = 2
 
 _FlowWater_move
 
