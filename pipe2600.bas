@@ -463,19 +463,20 @@ _DrawMiniPipe
 ; .X.
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off_bank1
 
  arg1 = arg1 + 1
- pfpixel arg1 arg2 on
+ arg4 = arg2
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg4 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg4 + 1
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off_bank1
  return
 
 _DrawMiniPipe_not0
@@ -485,19 +486,20 @@ _DrawMiniPipe_not0
 ; ...
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
 
  arg1 = arg1 + 1
- pfpixel arg1 arg2 off
+ arg4 = arg2
+ gosub _pfpixel_arg1_arg4_off_bank1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg4 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off_bank1
  arg4 = arg4 + 1
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off_bank1
  return
 
 _DrawMiniPipe_not1
@@ -507,19 +509,20 @@ _DrawMiniPipe_not1
 ; .X.
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
 
  arg1 = arg1 + 1
- pfpixel arg1 arg2 on
+ arg4 = arg2
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg4 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg4 + 1
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  return
 
 _DrawMiniPipe_not2
@@ -529,19 +532,20 @@ _DrawMiniPipe_not2
 ; .X.
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
 
  arg1 = arg1 + 1
- pfpixel arg1 arg2 off
+ arg4 = arg2
+ gosub _pfpixel_arg1_arg4_off_bank1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg4 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg4 + 1
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off_bank1
  return
 
 _DrawMiniPipe_not3
@@ -551,19 +555,20 @@ _DrawMiniPipe_not3
 ; ...
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
 
  arg1 = arg1 + 1
- pfpixel arg1 arg2 on
+ arg4 = arg2
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg4 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off_bank1
  arg4 = arg4 + 1
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off_bank1
  return
 
 _DrawMiniPipe_not4
@@ -573,19 +578,20 @@ _DrawMiniPipe_not4
 ; ...
 
  arg4 = arg2 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off_bank1
 
  arg1 = arg1 + 1
- pfpixel arg1 arg2 on
+ arg4 = arg2
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  arg4 = arg4 + 1
- pfpixel arg1 arg4 off
+ gosub _pfpixel_arg1_arg4_off_bank1
  arg4 = arg4 + 1
 
  arg1 = arg1 + 1
  arg4 = arg2 + 1
- pfpixel arg1 arg4 on
+ gosub _pfpixel_arg1_arg4_on_bank1
  return
 
 _DrawMiniPipe_not5
@@ -595,18 +601,27 @@ _DrawMiniPipe_not5
 ; .X.
 
  arg4 = arg2 + 1
+ gosub _pfpixel_arg1_arg4_off_bank1
+
+ arg1 = arg1 + 1
+ arg4 = arg2
+ gosub _pfpixel_arg1_arg4_off_bank1
+ arg4 = arg2 + 1
+ gosub _pfpixel_arg1_arg4_on_bank1
+ arg4 = arg4 + 1
+ gosub _pfpixel_arg1_arg4_on_bank1
+ arg4 = arg4 + 1
+
+ arg1 = arg1 + 1
+ arg4 = arg2 + 1
+ gosub _pfpixel_arg1_arg4_on_bank1
+ return
+
+_pfpixel_arg1_arg4_off_bank1
  pfpixel arg1 arg4 off
+ return
 
- arg1 = arg1 + 1
- pfpixel arg1 arg2 off
- arg4 = arg2 + 1
- pfpixel arg1 arg4 on
- arg4 = arg4 + 1
- pfpixel arg1 arg4 on
- arg4 = arg4 + 1
-
- arg1 = arg1 + 1
- arg4 = arg2 + 1
+_pfpixel_arg1_arg4_on_bank1
  pfpixel arg1 arg4 on
  return
 
