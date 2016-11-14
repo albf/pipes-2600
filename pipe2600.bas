@@ -57,8 +57,8 @@ __StartRestart
  lastMoviment = 0
  score = 0
  scorecolor= 30
- waterFlowTime1 = 45
- waterFlowTime2 = 1
+ waterFlowTime1 = 60
+ waterFlowTime2 = 0
 
 
 
@@ -177,7 +177,7 @@ end
  ;***************************************************************
 
  ; lets find pieces type
- arg4 = 3
+ arg4 = 4
  gosub _rand0toN
  waterDirection = arg3
  arg5 = arg3
@@ -194,7 +194,7 @@ end
  ; Find second and search a position until find
  ; a free and not so close.
 
- arg4 = 3
+ arg4 = 4
  gosub _rand0toN
  arg5 = arg3
 
@@ -421,7 +421,7 @@ _resetEnd
  gosub _FlowWater
  if arg6 = 0 then goto _timeEnd
 
- if arg6 = 1 then score = 0
+ ;if arg6 = 1 then score = 0
  if arg6 = 2 then score = score + 100
  goto __StartLevel
 
@@ -626,7 +626,7 @@ end
  goto _lockPosition_rolLoop
 _lockPosition_rolEnd
 
- isLocked[arg1] = isLocked_6[arg1] | arg4
+ isLocked[arg1] = isLocked[arg1] | arg4
  return
 
 
@@ -695,11 +695,92 @@ _updateWaterTime_Check
 
 _FlowWater
  arg6 = 0
-
  ; First, check if passing by a pipe
  if waterOnDoublePipe > 0 then waterOnDoublePipe = waterOnDoublePipe - 1 : goto _FlowWater_move
 
- ; Check for waterDirection change or fail
+ gosub _FlowWater_getDirection
+
+ ; If only one spot free, everything is fine, just move
+ if arg4 = 1 then goto _FlowWater_move
+
+ ; In here, must check if dead, on the double pipe or completed
+ arg6 = 1
+
+ if arg4 > 1 then return
+
+ ; If reminder is 3, level is finished.
+ if arg5 = 3 then arg6 = 2 : return
+
+ ; Dead if not one of double pipe cases
+ if waterDirection = 0 && arg5 <> 1 then return
+ if waterDirection = 1 && arg5 <> 0 then return
+ if waterDirection = 2 && arg5 <> 0 then return
+ if waterDirection = 3 && arg5 <> 1 then return
+
+ ; Double pipe case, return as fine and let it
+ ; flow freely for 2 iterations
+ arg6 = 0
+ waterOnDoublePipe = 2
+
+_FlowWater_move
+
+ if waterDirection > 0 then goto _FlowWater_not0
+ waterHeadY = waterHeadY + 1
+ goto _FlowWater_Continue
+
+_FlowWater_not0
+ if waterDirection > 1 then goto _FlowWater_not1
+ waterHeadX = waterHeadX - 1
+ goto _FlowWater_Continue
+
+_FlowWater_not1
+ if waterDirection > 2 then goto _FlowWater_not2
+ waterHeadY = waterHeadY - 1
+ goto _FlowWater_Continue
+
+_FlowWater_not2
+ waterHeadX = waterHeadX + 1
+
+_FlowWater_Continue
+ pfpixel waterHeadX waterHeadY on
+ gosub _UpdateWaterMissile
+
+ if waterOnDoublePipe > 0 then return
+
+ ; get diretion, will identify if dead/new pipe
+ gosub _FlowWater_getDirection
+
+ ; If on an open place, Death.
+ if arg4 > 1 then arg6 = 1 : return
+
+ ; check if entering a new pipe
+ if waterDirection = 0 && arg5 = 1 then goto _FlowWater_NewPipe
+ if waterDirection = 1 && arg5 = 0 then goto _FlowWater_NewPipe
+ if waterDirection = 2 && arg5 = 0 then goto _FlowWater_NewPipe
+ if waterDirection = 3 && arg5 = 1 then goto _FlowWater_NewPipe
+ return
+
+_FlowWater_NewPipe
+ arg1 = waterHeadX
+ arg2 = waterHeadY
+ gosub _convertPlayfiendToIndex
+
+ arg1 = arg5
+ arg2 = arg6
+ gosub _lockPosition
+
+ arg6 = 0
+ return
+
+
+ ; _FlowWater_getDirection is a subroutine used to
+ ; calculate waterDirection, number of free spots and
+ ; reminder, all used for further calculations.
+ ; Returns on arg4 (number of free spots), arg5 (reminder)
+ ; and waterDirection.
+
+_FlowWater_getDirection
+ ; Check for waterDirection change by checking for free spots
  arg4 = 0
 
  arg5 = waterHeadY + 1
@@ -727,53 +808,12 @@ _FlowWater_notUp
 
 _FlowWater_notRight
 
- if arg4 = 1 then goto _FlowWater_move
- ; In here, must check if dead, on the double pipe or completed
- arg6 = 1
-
- ; If not 0 and not 1, a free place. Death.
- if arg4 <> 0 then return
-
- ; Else, must use Y or X (depending on waterDirection) and get %5
+ ; Calculate 5-reminder, used to find out conflicts
  if waterDirection = 0 || waterDirection = 2 then arg5 = waterHeadY else arg5 = waterHeadX
 _FlowWater_remainderInit
  if arg5 > 4 then arg5 = arg5 - 5 else goto _FlowWater_remainderDone
  goto _FlowWater_remainderInit
 _FlowWater_remainderDone
-
- ; If reminder is 3, level is finished.
- if arg5 = 3 then arg6 = 2 : return
-
- ; Dead if not one of double pipe cases
- if waterDirection = 0 && arg5 <> 1 then return
- if waterDirection = 1 && arg5 <> 0 then return
- if waterDirection = 2 && arg5 <> 0 then return
- if waterDirection = 3 && arg5 <> 1 then return
-
- waterOnDoublePipe = 2
-
-_FlowWater_move
-
- if waterDirection > 0 then goto _FlowWater_not0
- waterHeadY = waterHeadY + 1
- goto _FlowWater_Continue
-
-_FlowWater_not0
- if waterDirection > 1 then goto _FlowWater_not1
- waterHeadX = waterHeadX - 1
- goto _FlowWater_Continue
-
-_FlowWater_not1
- if waterDirection > 2 then goto _FlowWater_not2
- waterHeadY = waterHeadY - 1
- goto _FlowWater_Continue
-
-_FlowWater_not2
- waterHeadX = waterHeadX + 1
-
-_FlowWater_Continue
- pfpixel waterHeadX waterHeadY on
- gosub _UpdateWaterMissile
 
  return
 
