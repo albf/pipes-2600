@@ -45,7 +45,9 @@
  dim waterInitTime1 = var7 : dim waterInitTime2 = var8
  dim waterTimeIsInit = var9
 
-
+ dim _sc1 = score
+ dim _sc2 = score+1
+ dim _sc3 = score+2
 
  ;***************************************************************
  ;
@@ -371,10 +373,23 @@ _joy0firePressed
  gosub _convertPlayerCoordinates
 
  ; Check if locked
- gosub _convertPlayfiendToIndex
+ gosub _convertPlayfieldToIndex
 
  gosub _isLocked
  if arg3 > 0 then goto _joy0fireEnd
+
+ ; Is not locked, check if is overwriting
+ aux_1 = arg1 + 1
+ aux_2 = arg2 + 1
+ if !pfread (aux_1, aux_2) then goto _field_free
+
+ aux_1 = 0
+ if _sc1 > $00 then aux_1 = aux_1 + 1
+ if _sc2 > $00 then aux_1 = aux_1 + 1
+ if _sc3 > $09 then aux_1 = aux_1 + 1
+
+ if aux_1 > 0 then score = score - 10
+_field_free
 
  arg3 = nextPipe[nextIndex]
  gosub _DrawPipe bank2
@@ -426,9 +441,8 @@ _resetEnd
  gosub _FlowWater
  if arg6 = 0 then goto _timeEnd
 
- ;if arg6 = 1 then score = 0
- if arg6 = 2 then score = score + 100
- goto __StartLevel
+ if arg6 = 1 then goto __StartRestart
+ if arg6 = 2 then score = score + 100 : goto __StartLevel
 
 _timeEnd
 
@@ -789,16 +803,18 @@ _FlowWater_Continue
  if waterDirection = 3 && arg5 = 1 then goto _FlowWater_NewPipe
  return
 
+ ; New pipe, must lock and update score
 _FlowWater_NewPipe
  arg1 = waterHeadX
  arg2 = waterHeadY
- gosub _convertPlayfiendToIndex
+ gosub _convertPlayfieldToIndex
 
  arg1 = arg5
  arg2 = arg6
  gosub _lockPosition
 
  arg6 = 0
+ score = score + 100
  return
 
 
@@ -924,27 +940,27 @@ _convertIndexToPlayfield
 
 
  ;***************************************************************
- ; _convertPlayfiendToIndex Subroutine
+ ; _convertPlayfieldToIndex Subroutine
  ; Oposite of _convertIndexToPlayfield. Returns on arg5(x) and arg6(y)
  ; arg3 and arg4 get dirty.
  ;***************************************************************
 
-_convertPlayfiendToIndex
+_convertPlayfieldToIndex
  arg5 = 0
  arg6 = 0
  arg3 = arg1 - 1
  arg4 = arg2 - 1
-_convertPlayfiendToIndex_div1
- if arg3 < 5 then goto _convertPlayfiendToIndex_div2
+_convertPlayfieldToIndex_div1
+ if arg3 < 5 then goto _convertPlayfieldToIndex_div2
  arg5 = arg5 + 1
  arg3 = arg3 - 5
- goto _convertPlayfiendToIndex_div1
+ goto _convertPlayfieldToIndex_div1
 
-_convertPlayfiendToIndex_div2
+_convertPlayfieldToIndex_div2
  if arg4 < 5 then return
  arg6 = arg6 + 1
  arg4 = arg4 - 5
- goto _convertPlayfiendToIndex_div2
+ goto _convertPlayfieldToIndex_div2
 
 
 
