@@ -42,6 +42,8 @@
 
  dim waterTime1 = var3 : dim waterTime2 = var4
  dim waterFlowTime1 = var5 : dim waterFlowTime2 = var6
+ dim waterInitTime1 = var7 : dim waterInitTime2 = var8
+ dim waterTimeIsInit = var9
 
 
 
@@ -57,8 +59,10 @@ __StartRestart
  lastMoviment = 0
  score = 0
  scorecolor= 30
- waterFlowTime1 = 60
+ waterFlowTime1 = 45
  waterFlowTime2 = 0
+ waterInitTime1 = 0
+ waterInitTime2 = 4
 
 
 
@@ -75,6 +79,7 @@ __StartLevel
  isLocked_4 = 0 : isLocked_5 = 0 : isLocked_6 = 0
  waterOnDoublePipe = 0
  waterTime1 = 0 : waterTime2 = 0
+ waterTimeIsInit = 1
 
 
 
@@ -675,7 +680,16 @@ _updateWaterTime_Time2
  waterTime2 = waterTime2 + 1
 
 _updateWaterTime_Check
+ if waterTimeIsInit = 0 then goto _updateWaterTime_Over
+ if waterTime1 < waterInitTime1 || waterTime2 < waterInitTime2 then return
+
+ ; finished init time
+ waterTimeIsInit = 0
+ goto _Flow
+
+_updateWaterTime_Over
  if waterTime1 < waterFlowTime1 || waterTime2 < waterFlowTime2 then return
+_Flow
  waterTime1 = 0
  waterTime2 = 0
  arg6 = 1
