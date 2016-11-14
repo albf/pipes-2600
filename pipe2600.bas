@@ -45,6 +45,11 @@
  dim waterInitTime1 = var7 : dim waterInitTime2 = var8
  dim waterTimeIsInit = var9
 
+ dim waterSpeedUpTime1 = var10
+ dim waterSpeedUp = var12
+
+ dim pressingInitial = var13;
+
  dim _sc1 = score
  dim _sc2 = score+1
  dim _sc3 = score+2
@@ -65,6 +70,7 @@ __StartRestart
  waterFlowTime2 = 0
  waterInitTime1 = 0
  waterInitTime2 = 4
+ waterSpeedUpTime1 = 5
 
 
 
@@ -82,6 +88,7 @@ __StartLevel
  waterOnDoublePipe = 0
  waterTime1 = 0 : waterTime2 = 0
  waterTimeIsInit = 1
+ waterSpeedUp = 0
 
 
 
@@ -376,7 +383,19 @@ _joy0firePressed
  gosub _convertPlayfieldToIndex
 
  gosub _isLocked
- if arg3 > 0 then goto _joy0fireEnd
+ if arg3 = 0 then goto _field_unlocked
+
+ ; Check for waterSpeedUp, only if not yet on
+ if waterSpeedUp > 0 then goto _joy0fireEnd
+
+ ; Check if actually on the second press
+ if pressingInitial < 2 then pressingInitial = pressingInitial + 1 : goto _joy0fireEnd
+
+ waterSpeedUp = 1
+ goto _joy0fireEnd
+
+_field_unlocked
+ pressingInitial = 0
 
  ; Is not locked, check if is overwriting
  aux_1 = arg1 + 1
@@ -709,6 +728,11 @@ _updateWaterTime_Time2
  waterTime2 = waterTime2 + 1
 
 _updateWaterTime_Check
+ if waterSpeedUp = 0 then goto _updateWaterTime_noSpeedUp
+ if waterTime1 < waterSpeedUpTime1 && waterTime2 = 0 then return
+ goto _Flow
+
+_updateWaterTime_noSpeedUp
  if waterTimeIsInit = 0 then goto _updateWaterTime_Over
  if waterTime1 < waterInitTime1 || waterTime2 < waterInitTime2 then return
 
