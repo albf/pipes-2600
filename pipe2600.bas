@@ -19,27 +19,29 @@
 
  dim arg1=b : dim arg2=c : dim arg3=d
  dim arg4=e : dim arg5=f : dim arg6=g
+ dim arg7=h
 
- dim aux_1=h : dim aux_2=i
+ dim aux_1=i : dim aux_2=j
+ dim aux_3=k : dim aux_4=l
 
- dim isLocked=j
- dim isLocked_1=j : dim isLocked_2=k : dim isLocked_3=l
- dim isLocked_4=m : dim isLocked_5=n : dim isLocked_6=o
+ dim isLocked=m
+ dim isLocked_1=m : dim isLocked_2=n : dim isLocked_3=o
+ dim isLocked_4=p : dim isLocked_5=q : dim isLocked_6=r
 
- dim nextPipe=p
- dim nextPipe_1=p : dim nextPipe_2=q : dim nextPipe_3=r
- dim nextPipe_4=s : dim nextPipe_5=t
+ dim nextPipe=s
+ dim nextPipe_1=s : dim nextPipe_2=t : dim nextPipe_3=u
+ dim nextPipe_4=v : dim nextPipe_5=w
 
- dim nextIndex=u
- dim nextPlayfieldx=v
+ dim nextIndex=x
+ dim nextPlayfieldx=y
 
- dim waterHeadX=w
- dim waterHeadY=x
- dim waterDirection=y
- dim waterOnDoublePipe=z
+ dim waterHeadX=z
+ dim waterHeadY=var0
+ dim waterDirection=var1
+ dim waterOnDoublePipe=var2
 
- dim waterTime1 = var0 : dim waterTime2 = var1
- dim waterFlowTime1 = var2 : dim waterFlowTime2 = var3
+ dim waterTime1 = var3 : dim waterTime2 = var4
+ dim waterFlowTime1 = var5 : dim waterFlowTime2 = var6
 
 
 
@@ -56,7 +58,7 @@ __StartRestart
  score = 0
  scorecolor= 30
  waterFlowTime1 = 45
- waterFlowTime2 = 0
+ waterFlowTime2 = 1
 
 
 
@@ -181,6 +183,7 @@ end
  arg5 = arg3
 
  gosub _randomValidPosition bank2
+ gosub _lockPosition
  gosub _convertIndexToPlayfield
 
  arg3 = waterDirection
@@ -197,6 +200,9 @@ end
 
 _findGoodEndPosition
  gosub _randomValidPosition bank2
+ ; store, if successfull, must mark as locked
+ aux_3 = arg1
+ aux_4 = arg2
  gosub _convertIndexToPlayfield
 
  ; Start and finish shouldn't be on same line or column
@@ -222,6 +228,11 @@ _findGoodEndPosition
 
  arg3 = arg5
  gosub _DrawInitPipe bank2
+
+ ; It's good, mark as locked
+ arg1 = aux_3
+ arg2 = aux_4
+ gosub _lockPosition
 
  ; Water starts on the middle of the starting pipe
  waterHeadX = aux_1 + 2
@@ -353,6 +364,13 @@ _joy0firePressed
  lastMoviment = lastMoviment | %00010000
 
  gosub _convertPlayerCoordinates
+
+ ; Check if locked
+ gosub _convertPlayfiendToIndex
+
+ gosub _isLocked
+ if arg3 > 0 then goto _joy0fireEnd
+
  arg3 = nextPipe[nextIndex]
  gosub _DrawPipe bank2
 
@@ -590,6 +608,55 @@ _DrawMiniPipe_not5
 
 
  ;***************************************************************
+ ; _lockPosition Subroutine
+ ; _lockPosition will mark position pointed by arg1 and arg2 as
+ ; locked. {} seems buggy when used with a variable, so avoid it.
+ ; arg4 and arg7 get dirty.
+ ;***************************************************************
+
+_lockPosition
+ arg4 = 1
+ arg7 = arg2
+_lockPosition_rolLoop
+ if arg7 = 0 then goto _lockPosition_rolEnd
+ asm
+   ASL arg4
+end
+ arg7 = arg7 - 1
+ goto _lockPosition_rolLoop
+_lockPosition_rolEnd
+
+ isLocked[arg1] = isLocked_6[arg1] | arg4
+ return
+
+
+
+ ;***************************************************************
+ ; _isLocked Subroutine
+ ; _isLocked will get current status pointed by arg5 and arg6.
+ ; arg4 and arg7 get dirty. Returns on arg3:
+ ; 0: not locked
+ ; >0: locked
+ ;***************************************************************
+
+_isLocked
+ arg4 = 1
+ arg7 = arg6
+_isLocked_rolLoop
+ if arg7 = 0 then goto _isLocked_rolEnd
+ asm
+   ASL arg4
+end
+ arg7 = arg7 - 1
+ goto _isLocked_rolLoop
+_isLocked_rolEnd
+
+ arg3 = isLocked[arg5] & arg4
+ return
+
+
+
+ ;***************************************************************
  ; _updateWaterTime Subroutine
  ; _updateWaterTime will update time variables and return the state
  ; on arg6. It could be:
@@ -784,6 +851,31 @@ _convertIndexToPlayfield
  arg1 = (arg1*5)+1
  arg2 = (arg2*5)+1
  return
+
+
+
+ ;***************************************************************
+ ; _convertPlayfiendToIndex Subroutine
+ ; Oposite of _convertIndexToPlayfield. Returns on arg5(x) and arg6(y)
+ ; arg3 and arg4 get dirty.
+ ;***************************************************************
+
+_convertPlayfiendToIndex
+ arg5 = 0
+ arg6 = 0
+ arg3 = arg1 - 1
+ arg4 = arg2 - 1
+_convertPlayfiendToIndex_div1
+ if arg3 < 5 then goto _convertPlayfiendToIndex_div2
+ arg5 = arg5 + 1
+ arg3 = arg3 - 5
+ goto _convertPlayfiendToIndex_div1
+
+_convertPlayfiendToIndex_div2
+ if arg4 < 5 then return
+ arg6 = arg6 + 1
+ arg4 = arg4 - 5
+ goto _convertPlayfiendToIndex_div2
 
 
 
