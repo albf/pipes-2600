@@ -59,6 +59,7 @@
  dim nextMiniPipe = var20 : dim nextPlayfieldxHolder = var21
 
  dim currentPlayerX_index = var22 : dim currentPlayerY_index = var23
+ dim currentWaterX_index = var24 : dim currentWaterY_index = var25
 
  dim _sc1 = score
  dim _sc2 = score+1
@@ -212,6 +213,11 @@ end
  arg5 = arg3
 
  gosub _randomValidPosition
+
+ ; Save indexes for Flow calculations
+ currentWaterX_index = arg1
+ currentWaterY_index = arg2
+
  gosub _lockPosition
  gosub _convertIndexToPlayfield
 
@@ -651,20 +657,17 @@ _FlowWater_3
  if arg4 > 1 then arg6 = 1 : return
 
  ; check if entering a new pipe
- if waterDirection = 0 && arg5 = 1 then goto _FlowWater_NewPipe
- if waterDirection = 1 && arg5 = 0 then goto _FlowWater_NewPipe
- if waterDirection = 2 && arg5 = 0 then goto _FlowWater_NewPipe
- if waterDirection = 3 && arg5 = 1 then goto _FlowWater_NewPipe
+ if waterDirection = 0 && arg5 = 1 then currentWaterY_index = currentWaterY_index + 1 : goto _FlowWater_NewPipe
+ if waterDirection = 1 && arg5 = 0 then currentWaterX_index = currentWaterX_index - 1 : goto _FlowWater_NewPipe
+ if waterDirection = 2 && arg5 = 0 then currentWaterY_index = currentWaterY_index - 1 : goto _FlowWater_NewPipe
+ if waterDirection = 3 && arg5 = 1 then currentWaterX_index = currentWaterX_index + 1 : goto _FlowWater_NewPipe
  return
 
  ; New pipe, must lock and update score
 _FlowWater_NewPipe
- arg1 = waterHeadX
- arg2 = waterHeadY
- gosub _convertPlayfieldToIndex
 
- arg1 = arg5
- arg2 = arg6
+ arg1 = currentWaterX_index
+ arg2 = currentWaterY_index
  gosub _lockPosition
 
  arg6 = 0
