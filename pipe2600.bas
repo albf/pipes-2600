@@ -6,6 +6,7 @@
  set kernel_options no_blank_lines
  set romsize 8kSC
  const pfres=32
+; set debug cyclescore
 
 
 
@@ -48,7 +49,8 @@
  dim waterSpeedUpTime1 = var10
  dim waterSpeedUp = var12
 
- dim pressingInitial = var13;
+ dim pressingInitial = var13
+ dim hookFlow = var14
 
  dim _sc1 = score
  dim _sc2 = score+1
@@ -89,6 +91,7 @@ __StartLevel
  waterTime1 = 0 : waterTime2 = 0
  waterTimeIsInit = 1
  waterSpeedUp = 0
+ hookFlow = 0
 
 
 
@@ -456,10 +459,21 @@ _resetEnd
 
 
  gosub _updateWaterTime
+ if hookFlow > 0 then goto _noHookFlow_0
  if arg6 = 0 then goto _timeEnd
- gosub _FlowWater
- if arg6 = 0 then goto _timeEnd
+ gosub _FlowWater_1
+ goto _checkFlowResults
 
+_noHookFlow_0
+ if hookFlow > 1 then goto _noHookFlow_1
+ gosub _FlowWater_2
+ goto _timeEnd
+
+_noHookFlow_1
+ ; hookFlow = 2
+ gosub _FlowWater_3
+
+_checkFlowResults
  if arg6 = 1 then goto __StartRestart
  if arg6 = 2 then score = score + 100 : goto __StartLevel
 
@@ -751,16 +765,17 @@ _Flow
 
 
  ;***************************************************************
- ; _FlowWater Subroutine
+ ; _FlowWater Subroutines
  ; _FlowWater will flow the water one step. It should only be called
  ; when it is time. Returns on arg6 the result:
  ; 0: ok, flowed flawlessly
  ; 1: dead. No valid pipe combination.
  ; 2: level finished
- ; arg4 and arg5 gets dirty.
+ ; arg4 and arg5 gets dirty. It has three parts, so it could be called
+ ; between drawscreens. Second one doesn't return anythin.
  ;***************************************************************
 
-_FlowWater
+_FlowWater_1
  arg6 = 0
  ; First, check if passing by a pipe
  if waterOnDoublePipe > 0 then waterOnDoublePipe = waterOnDoublePipe - 1 : goto _FlowWater_move
@@ -790,28 +805,39 @@ _FlowWater
  waterOnDoublePipe = 2
 
 _FlowWater_move
+ hookFlow = 1
 
  if waterDirection > 0 then goto _FlowWater_not0
  waterHeadY = waterHeadY + 1
- goto _FlowWater_Continue
+ return
 
 _FlowWater_not0
  if waterDirection > 1 then goto _FlowWater_not1
  waterHeadX = waterHeadX - 1
- goto _FlowWater_Continue
+ return
 
 _FlowWater_not1
  if waterDirection > 2 then goto _FlowWater_not2
  waterHeadY = waterHeadY - 1
- goto _FlowWater_Continue
+ return
 
 _FlowWater_not2
  waterHeadX = waterHeadX + 1
+ return
 
-_FlowWater_Continue
+
+; Start of second subroutine
+_FlowWater_2
+ hookFlow = 2
  pfpixel waterHeadX waterHeadY on
  gosub _UpdateWaterMissile
+ return
 
+
+; Start of third subroutine
+_FlowWater_3
+ hookFlow = 0
+ arg6 = 0
  if waterOnDoublePipe > 0 then return
 
  ; get diretion, will identify if dead/new pipe
