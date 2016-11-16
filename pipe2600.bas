@@ -58,6 +58,8 @@
 
  dim nextMiniPipe = var20 : dim nextPlayfieldxHolder = var21
 
+ dim currentPlayerX_index = var22 : dim currentPlayerY_index = var23
+
  dim _sc1 = score
  dim _sc2 = score+1
  dim _sc3 = score+2
@@ -190,6 +192,9 @@ end
  player1x=8
  player1y=94
 
+ currentPlayerX_index = 0
+ currentPlayerY_index = 0
+
  missile1height = 2
 
 
@@ -213,7 +218,7 @@ end
  arg3 = waterDirection
  aux_1 = arg1
  aux_2 = arg2
- gosub _DrawInitPipe bank2
+ gosub _DrawInitPipe
 
  ; Find second and search a position until find
  ; a free and not so close.
@@ -251,7 +256,7 @@ _findGoodEndPosition
 
 
  arg3 = arg5
- gosub _DrawInitPipe bank2
+ gosub _DrawInitPipe
 
  ; It's good, mark as locked
  arg1 = aux_3
@@ -282,10 +287,10 @@ _init_pipe_loop
  gosub _rand0toN
  nextPipe[aux_1] = arg3
 
- arg1 = aux_2
- arg2 = 28
+ DrawPipeArg1 = aux_2
+ DrawPipeArg2 = 28
  nextMiniPipe = arg3
- gosub _DrawMiniPipe
+ gosub _DrawMiniPipe bank2
 
  aux_1 = aux_1 + 1
  aux_2 = aux_2 + 6
@@ -314,6 +319,7 @@ _joy0downPressed
  if arg1 > 0 then goto _joy0downEnd
 
  player0y=player0y+15
+ currentPlayerY_index = currentPlayerY_index + 1
  lastMoviment = lastMoviment | %00000001
 
 _joy0downEnd
@@ -333,6 +339,7 @@ _joy0upPressed
  if arg1 > 0 then goto _joy0upEnd
 
  player0y=player0y-15
+ currentPlayerY_index = currentPlayerY_index - 1
  lastMoviment = lastMoviment | %00000010
 
 _joy0upEnd
@@ -352,6 +359,7 @@ _joy0leftPressed
  if arg1 > 0 then goto _joy0leftEnd
 
  player0x=player0x-20
+ currentPlayerX_index = currentPlayerX_index - 1
  lastMoviment = lastMoviment | %00000100
 
 _joy0leftEnd
@@ -371,6 +379,7 @@ _joy0rightPressed
  if arg1 > 0 then goto _joy0rightEnd
 
  player0x=player0x+20
+ currentPlayerX_index = currentPlayerX_index + 1
  lastMoviment = lastMoviment | %00001000
 
 _joy0rightEnd
@@ -388,10 +397,9 @@ _joy0firePressed
  if arg1 > 0 then goto _joy0fireEnd
  lastMoviment = lastMoviment | %00010000
 
- gosub _convertPlayerCoordinates
-
  ; Check if locked
- gosub _convertPlayfieldToIndex
+ arg1 = currentPlayerX_index
+ arg2 = currentPlayerY_index
 
  gosub _isLocked
  if arg3 = 0 then goto _field_unlocked
@@ -410,6 +418,7 @@ _field_unlocked
 
  if hookDrawPipe < 5 then goto _joy0fireEnd
 
+ gosub _convertIndexToPlayfield
  hookDrawPipe = 0
  DrawPipeArg1 = arg1
  DrawPipeArg2 = arg2
@@ -470,189 +479,6 @@ _timeEnd
 
 
  ;***************************************************************
- ; DrawMiniPipe Subroutine
- ; Draws a mini-pipe starting on x,y pointed by arg1 and arg2
- ; and nextMiniPipe as type, where 0,1,2,3,4,5,6 are valid values
- ;***************************************************************
-
-; Extra Details, some pixels are never changed:
-
-; X.X
-; ...
-; X.X
-
-_DrawMiniPipe
- if nextMiniPipe > 0 then goto _DrawMiniPipe_not0
-; .X.
-; .X.
-; .X.
-
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
-
- arg1 = arg1 + 1
- arg4 = arg2
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
-
- arg1 = arg1 + 1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
- return
-
-_DrawMiniPipe_not0
- if nextMiniPipe > 1 then goto _DrawMiniPipe_not1
-; ...
-; XXX
-; ...
-
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
-
- arg1 = arg1 + 1
- arg4 = arg2
- gosub _pfpixel_arg1_arg4_off_bank1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
- arg4 = arg4 + 1
-
- arg1 = arg1 + 1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
- return
-
-_DrawMiniPipe_not1
- if nextMiniPipe > 2 then goto _DrawMiniPipe_not2
-; .X.
-; XXX
-; .X.
-
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
-
- arg1 = arg1 + 1
- arg4 = arg2
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
-
- arg1 = arg1 + 1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- return
-
-_DrawMiniPipe_not2
- if nextMiniPipe > 3 then goto _DrawMiniPipe_not3
-; ...
-; XX.
-; .X.
-
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
-
- arg1 = arg1 + 1
- arg4 = arg2
- gosub _pfpixel_arg1_arg4_off_bank1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
-
- arg1 = arg1 + 1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
- return
-
-_DrawMiniPipe_not3
- if nextMiniPipe > 4 then goto _DrawMiniPipe_not4
-; .X.
-; XX.
-; ...
-
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
-
- arg1 = arg1 + 1
- arg4 = arg2
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
- arg4 = arg4 + 1
-
- arg1 = arg1 + 1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
- return
-
-_DrawMiniPipe_not4
- if nextMiniPipe > 5 then goto _DrawMiniPipe_not5
-; .X.
-; .XX
-; ...
-
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
-
- arg1 = arg1 + 1
- arg4 = arg2
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
- arg4 = arg4 + 1
-
- arg1 = arg1 + 1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- return
-
-_DrawMiniPipe_not5
-; If not5, must be 6
-; ...
-; .XX
-; .X.
-
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_off_bank1
-
- arg1 = arg1 + 1
- arg4 = arg2
- gosub _pfpixel_arg1_arg4_off_bank1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- arg4 = arg4 + 1
-
- arg1 = arg1 + 1
- arg4 = arg2 + 1
- gosub _pfpixel_arg1_arg4_on_bank1
- return
-
-_pfpixel_arg1_arg4_off_bank1
- pfpixel arg1 arg4 off
- return
-
-_pfpixel_arg1_arg4_on_bank1
- pfpixel arg1 arg4 on
- return
-
-
-
- ;***************************************************************
  ; _lockPosition Subroutine
  ; _lockPosition will mark position pointed by arg1 and arg2 as
  ; locked. {} seems buggy when used with a variable, so avoid it.
@@ -678,7 +504,7 @@ _lockPosition_rolEnd
 
  ;***************************************************************
  ; _isLocked Subroutine
- ; _isLocked will get current status pointed by arg5 and arg6.
+ ; _isLocked will get current status pointed by arg1(x) and arg2(y).
  ; arg4 and arg7 get dirty. Returns on arg3:
  ; 0: not locked
  ; >0: locked
@@ -686,7 +512,7 @@ _lockPosition_rolEnd
 
 _isLocked
  arg4 = 1
- arg7 = arg6
+ arg7 = arg2
 _isLocked_rolLoop
  if arg7 = 0 then goto _isLocked_rolEnd
  asm
@@ -696,7 +522,7 @@ end
  goto _isLocked_rolLoop
 _isLocked_rolEnd
 
- arg3 = isLocked[arg5] & arg4
+ arg3 = isLocked[arg1] & arg4
  return
 
 
@@ -931,31 +757,6 @@ _rand0toN_loop
 
 
  ;***************************************************************
- ; _convertPlayerCoordinates Subroutine
- ; _convertPlayerCoordinates will convert player to playfield position.
- ; arg3 and arg4 get dirty, results on arg1 and arg2, to avoid copy
- ;***************************************************************
-
-_convertPlayerCoordinates
- arg3 = player0x
- arg4 = player0y
- arg1 = 1
- arg2 = 1
-_convertPlayerCoordinates_Loop1
- if arg3 < 10 then goto _convertPlayerCoordinates_Loop2
- arg1 = arg1 + 5
- arg3 = arg3 - 20
- goto _convertPlayerCoordinates_Loop1
-
-_convertPlayerCoordinates_Loop2
- if arg4 < 20 then return
- arg4 = arg4 - 15
- arg2 = arg2 + 5
- goto _convertPlayerCoordinates_Loop2
-
-
-
- ;***************************************************************
  ; _convertIndexToPlayfield Subroutine
  ; Just converts arg1(x) and arg(2) for later call to DrawPipe
  ;***************************************************************
@@ -1023,21 +824,6 @@ _randomValidPositionGetY
 
  arg2 = arg3
  return
-
-
- bank 2
-
- ;***************************************************************
- ; _rand0toN_bank2 Subroutine
- ; A copy of _rand0toN for performance/size reasons
- ;***************************************************************
-
-_rand0toN_bank2
- arg3 = rand
-_rand0toN_bank2_loop
- if arg3 < arg4 then return
- arg3 = arg3 - arg4
- goto _rand0toN_bank2_loop
 
 
 
@@ -1127,6 +913,198 @@ _DrawInitPipe_not2
 
  arg2 = arg2 - 1
  pfpixel arg1 arg2 on
+ return
+
+
+
+ bank 2
+
+ ;***************************************************************
+ ; _rand0toN_bank2 Subroutine
+ ; A copy of _rand0toN for performance/size reasons
+ ;***************************************************************
+
+_rand0toN_bank2
+ arg3 = rand
+_rand0toN_bank2_loop
+ if arg3 < arg4 then return
+ arg3 = arg3 - arg4
+ goto _rand0toN_bank2_loop
+
+
+
+ ;***************************************************************
+ ; DrawMiniPipe Subroutine
+ ; Draws a mini-pipe starting on x,y pointed by DrawPipeArg1 and DrawPipeArg2
+ ; and nextMiniPipe as type, where 0,1,2,3,4,5,6 are valid values.
+ ; DrawPipeArg4 gets dirty.
+ ;***************************************************************
+
+; Extra Details, some pixels are never changed:
+
+; X.X
+; ...
+; X.X
+
+_DrawMiniPipe
+ if nextMiniPipe > 0 then goto _DrawMiniPipe_not0
+; .X.
+; .X.
+; .X.
+
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_off
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_off
+ return
+
+_DrawMiniPipe_not0
+ if nextMiniPipe > 1 then goto _DrawMiniPipe_not1
+; ...
+; XXX
+; ...
+
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2
+ gosub _pfpixel_arg1_arg4_off
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+ gosub _pfpixel_arg1_arg4_off
+ DrawPipeArg4 = DrawPipeArg4 + 1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_off
+ return
+
+_DrawMiniPipe_not1
+ if nextMiniPipe > 2 then goto _DrawMiniPipe_not2
+; .X.
+; XXX
+; .X.
+
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+ return
+
+_DrawMiniPipe_not2
+ if nextMiniPipe > 3 then goto _DrawMiniPipe_not3
+; ...
+; XX.
+; .X.
+
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2
+ gosub _pfpixel_arg1_arg4_off
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_off
+ return
+
+_DrawMiniPipe_not3
+ if nextMiniPipe > 4 then goto _DrawMiniPipe_not4
+; .X.
+; XX.
+; ...
+
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+ gosub _pfpixel_arg1_arg4_off
+ DrawPipeArg4 = DrawPipeArg4 + 1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_off
+ return
+
+_DrawMiniPipe_not4
+ if nextMiniPipe > 5 then goto _DrawMiniPipe_not5
+; .X.
+; .XX
+; ...
+
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_off
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+ gosub _pfpixel_arg1_arg4_off
+ DrawPipeArg4 = DrawPipeArg4 + 1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+ return
+
+_DrawMiniPipe_not5
+; If not5, must be 6
+; ...
+; .XX
+; .X.
+
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_off
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2
+ gosub _pfpixel_arg1_arg4_off
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+ gosub _pfpixel_arg1_arg4_on
+ DrawPipeArg4 = DrawPipeArg4 + 1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
+ gosub _pfpixel_arg1_arg4_on
  return
 
 
@@ -1608,8 +1586,8 @@ vblank_not2
 
 vblank_not3
  if hookDrawPipe > 4 then return
- arg1 = nextPlayfieldxHolder
- arg2 = 28
- gosub _DrawMiniPipe bank1
+ DrawPipeArg1 = nextPlayfieldxHolder
+ DrawPipeArg2 = 28
+ gosub _DrawMiniPipe
  hookDrawPipe = 5
  return
