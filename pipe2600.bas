@@ -6,7 +6,7 @@
  set kernel_options no_blank_lines
  set romsize 8kSC
  const pfres=32
-; set debug cyclescore
+ set debug cyclescore
 
 
 
@@ -51,6 +51,10 @@
 
  dim pressingInitial = var13
  dim hookFlow = var14
+
+ dim DrawPipeArg1 = var15 : dim DrawPipeArg2 = var16
+ dim DrawPipeArg3 = var17 : dim DrawPipeArg4 = var18
+ dim hookDrawPipe = var19
 
  dim _sc1 = score
  dim _sc2 = score+1
@@ -413,8 +417,17 @@ _field_unlocked
  if aux_1 > 0 then score = score - 10
 _field_free
 
- arg3 = nextPipe[nextIndex]
+ DrawPipeArg1 = arg1
+ DrawPipeArg2 = arg2
+ DrawPipeArg3 = nextPipe[nextIndex]
+
+ hookDrawPipe = 0
  gosub _DrawPipe bank2
+ hookDrawPipe = 1
+ gosub _DrawPipe bank2
+ hookDrawPipe = 2
+ gosub _DrawPipe bank2
+
 
  ; Update nextIndex and nextPipe
  arg4 = 7
@@ -1156,9 +1169,10 @@ _DrawInitPipe_not2
 
  ;***************************************************************
  ; _DrawPipe Subroutine
- ; Draws a non-start pipe starting on x,y pointed by arg1 and arg2
- ; and arg3 as type, where 0,1,2,3,4,5,6 are valid values.
- ; arg4 and arg5 get dirty.
+ ; Draws a non-start pipe starting on x,y pointed by DrawPipeArg1 and DrawPipeArg2
+ ; and DrawPipeArg3 as type, where 0,1,2,3,4,5,6 are valid values.
+ ; DrawPipeArg4 and arg5 get dirty. It should be called 3 times, increasing
+ ; the value of hookDrawPipe each time (0, 1 and 3). It's a performance constraint.
  ;***************************************************************
 
 ; Extra Details, some pixels are never changed:
@@ -1172,233 +1186,299 @@ _DrawInitPipe_not2
 ; So they don't need to be cleaned, they are always OFF
 
 _DrawPipe
- if arg3 > 0 then goto _DrawPipe_not0
+ if DrawPipeArg3 > 0 then goto _DrawPipe_not0
 ; .X.X.
 ; .X.X.
 ; .X.X.
 ; .X.X.
 ; .X.X.
 
- arg4 = arg2 + 1
+ if hookDrawPipe > 0 then goto _DrawPipe0_notHook0
+
+ DrawPipeArg4 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg4_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg1_arg4_off
 
- arg1 = arg1 + 1
- arg4 = arg2 + 4
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 4
  gosub _pfvline_arg1_arg2_arg4_on
+ return
 
- arg1 = arg1 + 1
- arg4 = arg2 + 1
+_DrawPipe0_notHook0
+ if hookDrawPipe > 1 then goto _DrawPipe0_notHook1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg4_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg1_arg4_off
 
- arg1 = arg1 + 1
- arg4 = arg2 + 4
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 4
  gosub _pfvline_arg1_arg2_arg4_on
+ return
 
- arg1 = arg1 + 1
- arg4 = arg2 + 1
+_DrawPipe0_notHook1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg4_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg1_arg4_off
  return
 
 _DrawPipe_not0
- if arg3 > 1 then goto _DrawPipe_not1
+ if DrawPipeArg3 > 1 then goto _DrawPipe_not1
 ; .....
 ; XXXXX
 ; .....
 ; XXXXX
 ; .....
 
- arg4 = arg1 + 1
+ if hookDrawPipe > 0 then goto _DrawPipe1_notHook0
+
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
- arg4 = arg1 + 4
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 4
  gosub _pfhline_arg1_arg2_arg4_on
+ return
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+_DrawPipe1_notHook0
+ if hookDrawPipe > 1 then goto _DrawPipe1_notHook1
+
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
- arg4 = arg1 + 4
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 4
  gosub _pfhline_arg1_arg2_arg4_on
+ return
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+_DrawPipe1_notHook1
+
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
  return
 
 _DrawPipe_not1
- if arg3 > 2 then goto _DrawPipe_not2
+ if DrawPipeArg3 > 2 then goto _DrawPipe_not2
 ; .X.X.
 ; XXXXX
 ; .X.X.
 ; XXXXX
 ; .X.X.
 
- arg4 = arg2 + 1
+ if hookDrawPipe > 0 then goto _DrawPipe2_notHook0
+
+ DrawPipeArg4 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg4_on
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg1_arg4_on
 
- arg1 = arg1 + 1
- arg4 = arg2 + 4
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 4
  gosub _pfvline_arg1_arg2_arg4_on
+ return
 
- arg1 = arg1 + 1
- arg4 = arg2 + 1
+_DrawPipe2_notHook0
+ if hookDrawPipe > 1 then goto _DrawPipe2_notHook1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg4_on
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg1_arg4_on
 
- arg1 = arg1 + 1
- arg4 = arg2 + 4
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 4
  gosub _pfvline_arg1_arg2_arg4_on
+ return
 
- arg1 = arg1 + 1
- arg4 = arg2 + 1
+_DrawPipe2_notHook1
+
+ DrawPipeArg1 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg4_on
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg1_arg4_on
  return
 
 _DrawPipe_not2
- if arg3 > 3 then goto _DrawPipe_not3
+ if DrawPipeArg3 > 3 then goto _DrawPipe_not3
 ; .....
 ; XXXX.
 ; ...X.
 ; XX.X.
 ; .X.X.
 
- arg4 = arg1 + 1
+ if hookDrawPipe > 0 then goto _DrawPipe3_notHook0
+
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
- arg4 = arg1 + 3
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 3
  gosub _pfhline_arg1_arg2_arg4_on
- arg4 = arg4 + 1
+ return
+ ; Line not complete yet
+
+_DrawPipe3_notHook0
+ if hookDrawPipe > 1 then goto _DrawPipe3_notHook1
+
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_on
 
- arg2 = arg2 + 1
- pfpixel arg1 arg2 on
- arg4 = arg1 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ pfpixel DrawPipeArg1 DrawPipeArg2 on
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 1
+ return
+ ; Line not complete yet
+
+_DrawPipe3_notHook1
+
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 1
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 1
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_on
  return
 
 _DrawPipe_not3
- if arg3 > 4 then goto _DrawPipe_not4
+ if DrawPipeArg3 > 4 then goto _DrawPipe_not4
 ; .X.X.
 ; XX.X.
 ; ...X.
 ; XXXX.
 ; .....
 
- arg4 = arg1 + 1
+ if hookDrawPipe > 0 then goto _DrawPipe4_notHook0
+
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_on
 
- arg2 = arg2 + 1
- pfpixel arg1 arg2 on
- arg4 = arg1 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ pfpixel DrawPipeArg1 DrawPipeArg2 on
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 1
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 1
+ return
+ ; Line not complete yet
+
+_DrawPipe4_notHook0
+ if hookDrawPipe > 1 then goto _DrawPipe4_notHook1
+
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 1
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_on
 
- arg2 = arg2 + 1
- arg4 = arg1 + 3
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 4
+ gosub _pfpixel_arg4_arg2_off
+ return
+ ; Line not complete yet
+
+_DrawPipe4_notHook1
+
+ DrawPipeArg4 = DrawPipeArg4 - 1
  gosub _pfhline_arg1_arg2_arg4_on
- arg4 = arg4 + 1
- gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
  return
 
 _DrawPipe_not4
- if arg3 > 5 then goto _DrawPipe_not5
+ if DrawPipeArg3 > 5 then goto _DrawPipe_not5
 ; .X.X.
 ; .X.XX
 ; .X...
 ; .XXXX
 ; .....
 
- arg4 = arg1 + 1
+ if hookDrawPipe > 0 then goto _DrawPipe5_notHook0
+
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_on
 
- arg2 = arg2 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg2_off
- arg4 = arg1 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 1
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 1
+ return
+ ; Line not complete yet
+
+_DrawPipe5_notHook0
+ if hookDrawPipe > 1 then goto _DrawPipe5_notHook1
+
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 1
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_on
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg2_off
- arg5 = arg1 + 1
- arg4 = arg1 + 4
- pfhline arg5 arg2 arg4 on
+ return
+ ; Line not complete yet
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+_DrawPipe5_notHook1
+
+ arg5 = DrawPipeArg1 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 4
+ pfhline arg5 DrawPipeArg2 DrawPipeArg4 on
+
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
  return
 
@@ -1410,65 +1490,78 @@ _DrawPipe_not5
 ; .X.XX
 ; .X.X.
 
- arg4 = arg1 + 1
+ if hookDrawPipe > 0 then goto _DrawPipe6_notHook0
+
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 4
+ arg5 = DrawPipeArg1 + 1
+ pfhline arg5 DrawPipeArg2 DrawPipeArg4 on
+ return
+ ; Line not complete yet
+
+_DrawPipe6_notHook0
+ if hookDrawPipe > 1 then goto _DrawPipe6_notHook1
+
  gosub _pfpixel_arg1_arg2_off
- arg4 = arg1 + 4
- arg5 = arg1 + 1
- pfhline arg5 arg2 arg4 on
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
 
- arg2 = arg2 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg2_off
- arg4 = arg1 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 1
+ return
+ ; Line not complete yet
+
+_DrawPipe6_notHook1
+
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_off
- arg4 = arg4 + 1
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 1
+ DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_on
 
- arg2 = arg2 + 1
- arg4 = arg1 + 1
+ DrawPipeArg2 = DrawPipeArg2 + 1
+ DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- arg4 = arg4 + 2
+ DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_on
  return
 
 _pfpixel_arg4_arg2_off
- pfpixel arg4 arg2 off
+ pfpixel DrawPipeArg4 DrawPipeArg2 off
  return
 
 _pfpixel_arg4_arg2_on
- pfpixel arg4 arg2 on
+ pfpixel DrawPipeArg4 DrawPipeArg2 on
  return
 
 _pfpixel_arg1_arg4_on
- pfpixel arg1 arg4 on
+ pfpixel DrawPipeArg1 DrawPipeArg4 on
  return
 
 _pfvline_arg1_arg2_arg4_on
- pfvline arg1 arg2 arg4 on
+ pfvline DrawPipeArg1 DrawPipeArg2 DrawPipeArg4 on
  return
 
 _pfhline_arg1_arg2_arg4_on
- pfhline arg1 arg2 arg4 on
+ pfhline DrawPipeArg1 DrawPipeArg2 DrawPipeArg4 on
  return
 
 _pfpixel_arg1_arg2_off
- pfpixel arg1 arg2 off
+ pfpixel DrawPipeArg1 DrawPipeArg2 off
  return
 
 _pfpixel_arg1_arg4_off
- pfpixel arg1 arg4 off
+ pfpixel DrawPipeArg1 DrawPipeArg4 off
  return
