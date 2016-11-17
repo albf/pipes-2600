@@ -636,7 +636,7 @@ _lockPosition
  arg4 = 1
  arg7 = arg2
 _lockPosition_rolLoop
- if arg7 = 0 then isLocked[arg1] = isLocked[arg1] | arg4 : return
+ if arg7 = 0 then isLocked[arg1] = isLocked[arg1] | arg4 : return thisbank
  asm
    ASL arg4
 end
@@ -664,27 +664,27 @@ _updateWaterTime
 
 _updateWaterTime_Check
  if waterSpeedUp = 0 then goto _updateWaterTime_noSpeedUp
- if waterTime1 < waterSpeedUpTime1 && waterTime2 = 0 then return
+ if waterTime1 < waterSpeedUpTime1 && waterTime2 = 0 then return thisbank
  goto _Flow
 
 _updateWaterTime_noSpeedUp
  if waterTimeIsInit = 0 then goto _updateWaterTime_Over
- if waterTime1 < waterInitTime1 || waterTime2 < waterInitTime2 then return
+ if waterTime1 < waterInitTime1 || waterTime2 < waterInitTime2 then return thisbank
 
  ; finished init time
  waterTimeIsInit = 0
  waterTime1 = 0
  waterTime2 = 0
  arg6 = 2
- return
+ return thisbank
 
 _updateWaterTime_Over
- if waterTime1 < waterFlowTime1 || waterTime2 < waterFlowTime2 then return
+ if waterTime1 < waterFlowTime1 || waterTime2 < waterFlowTime2 then return thisbank
 _Flow
  waterTime1 = 0
  waterTime2 = 0
  arg6 = 1
- return
+ return thisbank
 
 
 
@@ -696,7 +696,7 @@ _Flow
  ; 1: dead. No valid pipe combination.
  ; 2: level finished
  ; arg4 and arg5 gets dirty. It has three parts, so it could be called
- ; between drawscreens. Second one doesn't return anythin.
+ ; between drawscreens. Second one doesn't return anything.
  ;***************************************************************
 
 _FlowWater_1
@@ -712,16 +712,16 @@ _FlowWater_1
  ; In here, must check if dead, on the double pipe or completed
  arg6 = 1
 
- if arg4 > 1 then return
+ if arg4 > 1 then return thisbank
 
  ; If reminder is 3, level is finished.
- if arg5 = 3 then arg6 = 2 : return
+ if arg5 = 3 then arg6 = 2 : return thisbank
 
  ; Dead if not one of double pipe cases
- if waterDirection = 0 && arg5 <> 1 then return
- if waterDirection = 1 && arg5 <> 0 then return
- if waterDirection = 2 && arg5 <> 0 then return
- if waterDirection = 3 && arg5 <> 1 then return
+ if waterDirection = 0 && arg5 <> 1 then return thisbank
+ if waterDirection = 1 && arg5 <> 0 then return thisbank
+ if waterDirection = 2 && arg5 <> 0 then return thisbank
+ if waterDirection = 3 && arg5 <> 1 then return thisbank
 
  ; Double pipe case, return as fine and let it
  ; flow freely for 2 iterations
@@ -731,7 +731,7 @@ _FlowWater_1
 _FlowWater_move
  hookFlow = 1
 
- return
+ return thisbank
 
 
 ; Start of second subroutine
@@ -747,27 +747,27 @@ _FlowWater_2
  pfpixel waterHeadX waterHeadY on
 
  hookFlow = 2
- return
+ return thisbank
 
 
 ; Start of third subroutine
 _FlowWater_3
  hookFlow = 0
  arg6 = 0
- if waterOnDoublePipe > 0 then return
+ if waterOnDoublePipe > 0 then return thisbank
 
  ; get diretion, will identify if dead/new pipe
  gosub _FlowWater_getDirection
 
  ; If on an open place, Death.
- if arg4 > 1 then arg6 = 1 : return
+ if arg4 > 1 then arg6 = 1 : return thisbank
 
  ; check if entering a new pipe
  if waterDirection = 0 && arg5 = 1 then currentWaterY_index = currentWaterY_index + 1 : goto _FlowWater_NewPipe
  if waterDirection = 1 && arg5 = 0 then currentWaterX_index = currentWaterX_index - 1 : goto _FlowWater_NewPipe
  if waterDirection = 2 && arg5 = 0 then currentWaterY_index = currentWaterY_index - 1 : goto _FlowWater_NewPipe
  if waterDirection = 3 && arg5 = 1 then currentWaterX_index = currentWaterX_index + 1 : goto _FlowWater_NewPipe
- return
+ return thisbank
 
  ; New pipe, must lock and update score
 _FlowWater_NewPipe
@@ -778,7 +778,7 @@ _FlowWater_NewPipe
 
  arg6 = 0
  score = score + 100
- return
+ return thisbank
 
 
  ; _FlowWater_getDirection is a subroutine used to
@@ -811,7 +811,7 @@ _FlowWater_remainderInit
  goto _FlowWater_remainderInit
 _FlowWater_remainderDone
 
- return
+ return thisbank
 
 
 
@@ -823,7 +823,7 @@ _FlowWater_remainderDone
 _rand0toN
  arg3 = rand
 _rand0toN_loop
- if arg3 < arg4 then return
+ if arg3 < arg4 then return thisbank
  arg3 = arg3 - arg4
  goto _rand0toN_loop
 
@@ -837,7 +837,7 @@ _rand0toN_loop
 _convertIndexToPlayfield
  arg1 = (arg1*5)+1
  arg2 = (arg2*5)+1
- return
+ return thisbank
 
 
 
@@ -901,7 +901,7 @@ _DrawInitPipe
 
  arg1 = arg1 + 1
  pfvline arg1 arg2 arg3 on
- return
+ return thisbank
 
 _DrawInitPipe_not0
  if arg3 > 1 then goto _DrawInitPipe_not1
@@ -921,7 +921,7 @@ _DrawInitPipe_not0
  arg2 = arg2 - 1
  arg1 = arg1 + 3
  pfpixel arg1 arg2 on
- return
+ return thisbank
 
 _DrawInitPipe_not1
  if arg3 > 2 then goto _DrawInitPipe_not2
@@ -941,7 +941,7 @@ _DrawInitPipe_not1
  arg1 = arg1 - 1
  arg2 = arg2 + 3
  pfpixel arg1 arg2 on
- return
+ return thisbank
 
 _DrawInitPipe_not2
 ; If not2, must be 3
@@ -961,7 +961,7 @@ _DrawInitPipe_not2
 
  arg2 = arg2 - 1
  pfpixel arg1 arg2 on
- return
+ return thisbank
 
 
 
@@ -975,7 +975,7 @@ _DrawInitPipe_not2
 _rand0toN_bank2
  arg3 = rand
 _rand0toN_bank2_loop
- if arg3 < arg4 then return
+ if arg3 < arg4 then return thisbank
  arg3 = arg3 - arg4
  goto _rand0toN_bank2_loop
 
@@ -1194,7 +1194,7 @@ _DrawPipe
  DrawPipeArg1 = DrawPipeArg1 + 1
  DrawPipeArg4 = DrawPipeArg2 + 4
  gosub _pfvline_arg1_arg2_arg4_on
- return
+ return thisbank
 
 _DrawPipe0_notHook1
  if hookDrawPipe > 2 then goto _DrawPipe0_notHook2
@@ -1208,7 +1208,7 @@ _DrawPipe0_notHook1
  DrawPipeArg1 = DrawPipeArg1 + 1
  DrawPipeArg4 = DrawPipeArg2 + 4
  gosub _pfvline_arg1_arg2_arg4_on
- return
+ return thisbank
 
 _DrawPipe0_notHook2
 
@@ -1217,7 +1217,7 @@ _DrawPipe0_notHook2
  gosub _pfpixel_arg1_arg4_off
  DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg1_arg4_off
- return
+ return thisbank
 
 _DrawPipe_not0
  if DrawPipeArg3 > 1 then goto _DrawPipe_not1
@@ -1237,7 +1237,7 @@ _DrawPipe_not0
  DrawPipeArg2 = DrawPipeArg2 + 1
  DrawPipeArg4 = DrawPipeArg1 + 4
  gosub _pfhline_arg1_arg2_arg4_on
- return
+ return thisbank
 
 _DrawPipe1_notHook1
  if hookDrawPipe > 2 then goto _DrawPipe1_notHook2
@@ -1251,7 +1251,7 @@ _DrawPipe1_notHook1
  DrawPipeArg2 = DrawPipeArg2 + 1
  DrawPipeArg4 = DrawPipeArg1 + 4
  gosub _pfhline_arg1_arg2_arg4_on
- return
+ return thisbank
 
 _DrawPipe1_notHook2
 
@@ -1260,7 +1260,7 @@ _DrawPipe1_notHook2
  gosub _pfpixel_arg4_arg2_off
  DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
- return
+ return thisbank
 
 _DrawPipe_not1
  if DrawPipeArg3 > 2 then goto _DrawPipe_not2
@@ -1280,7 +1280,7 @@ _DrawPipe_not1
  DrawPipeArg1 = DrawPipeArg1 + 1
  DrawPipeArg4 = DrawPipeArg2 + 4
  gosub _pfvline_arg1_arg2_arg4_on
- return
+ return thisbank
 
 _DrawPipe2_notHook1
  if hookDrawPipe > 2 then goto _DrawPipe2_notHook2
@@ -1294,7 +1294,7 @@ _DrawPipe2_notHook1
  DrawPipeArg1 = DrawPipeArg1 + 1
  DrawPipeArg4 = DrawPipeArg2 + 4
  gosub _pfvline_arg1_arg2_arg4_on
- return
+ return thisbank
 
 _DrawPipe2_notHook2
 
@@ -1303,7 +1303,7 @@ _DrawPipe2_notHook2
  gosub _pfpixel_arg1_arg4_on
  DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg1_arg4_on
- return
+ return thisbank
 
 _DrawPipe_not2
  if DrawPipeArg3 > 3 then goto _DrawPipe_not3
@@ -1323,7 +1323,7 @@ _DrawPipe_not2
  DrawPipeArg2 = DrawPipeArg2 + 1
  DrawPipeArg4 = DrawPipeArg1 + 3
  gosub _pfhline_arg1_arg2_arg4_on
- return
+ return thisbank
  ; Line not complete yet
 
 _DrawPipe3_notHook1
@@ -1342,7 +1342,7 @@ _DrawPipe3_notHook1
  pfpixel DrawPipeArg1 DrawPipeArg2 on
  DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- return
+ return thisbank
  ; Line not complete yet
 
 _DrawPipe3_notHook2
@@ -1359,7 +1359,7 @@ _DrawPipe3_notHook2
  gosub _pfpixel_arg4_arg2_on
  DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_on
- return
+ return thisbank
 
 _DrawPipe_not3
  if DrawPipeArg3 > 4 then goto _DrawPipe_not4
@@ -1382,7 +1382,7 @@ _DrawPipe_not3
  gosub _pfpixel_arg4_arg2_on
  DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_off
- return
+ return thisbank
  ; Line not complete yet
 
 _DrawPipe4_notHook1
@@ -1402,7 +1402,7 @@ _DrawPipe4_notHook1
  DrawPipeArg2 = DrawPipeArg2 + 1
  DrawPipeArg4 = DrawPipeArg1 + 4
  gosub _pfpixel_arg4_arg2_off
- return
+ return thisbank
  ; Line not complete yet
 
 _DrawPipe4_notHook2
@@ -1415,7 +1415,7 @@ _DrawPipe4_notHook2
  gosub _pfpixel_arg4_arg2_off
  DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
- return
+ return thisbank
 
 _DrawPipe_not4
  if DrawPipeArg3 > 5 then goto _DrawPipe_not5
@@ -1438,7 +1438,7 @@ _DrawPipe_not4
  gosub _pfpixel_arg4_arg2_on
  DrawPipeArg4 = DrawPipeArg4 + 1
  gosub _pfpixel_arg4_arg2_off
- return
+ return thisbank
  ; Line not complete yet
 
 _DrawPipe5_notHook1
@@ -1457,7 +1457,7 @@ _DrawPipe5_notHook1
 
  DrawPipeArg2 = DrawPipeArg2 + 1
  gosub _pfpixel_arg1_arg2_off
- return
+ return thisbank
  ; Line not complete yet
 
 _DrawPipe5_notHook2
@@ -1471,7 +1471,7 @@ _DrawPipe5_notHook2
  gosub _pfpixel_arg4_arg2_off
  DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_off
- return
+ return thisbank
 
 _DrawPipe_not5
 ; If not5, must be 6
@@ -1492,7 +1492,7 @@ _DrawPipe_not5
  DrawPipeArg4 = DrawPipeArg1 + 4
  arg5 = DrawPipeArg1 + 1
  pfhline arg5 DrawPipeArg2 DrawPipeArg4 on
- return
+ return thisbank
  ; Line not complete yet
 
 _DrawPipe6_notHook1
@@ -1510,7 +1510,7 @@ _DrawPipe6_notHook1
  gosub _pfpixel_arg1_arg2_off
  DrawPipeArg4 = DrawPipeArg1 + 1
  gosub _pfpixel_arg4_arg2_on
- return
+ return thisbank
  ; Line not complete yet
 
 _DrawPipe6_notHook2
@@ -1527,35 +1527,35 @@ _DrawPipe6_notHook2
  gosub _pfpixel_arg4_arg2_on
  DrawPipeArg4 = DrawPipeArg4 + 2
  gosub _pfpixel_arg4_arg2_on
- return
+ return thisbank
 
 _pfpixel_arg4_arg2_off
  pfpixel DrawPipeArg4 DrawPipeArg2 off
- return
+ return thisbank
 
 _pfpixel_arg4_arg2_on
  pfpixel DrawPipeArg4 DrawPipeArg2 on
- return
+ return thisbank
 
 _pfpixel_arg1_arg4_on
  pfpixel DrawPipeArg1 DrawPipeArg4 on
- return
+ return thisbank
 
 _pfvline_arg1_arg2_arg4_on
  pfvline DrawPipeArg1 DrawPipeArg2 DrawPipeArg4 on
- return
+ return thisbank
 
 _pfhline_arg1_arg2_arg4_on
  pfhline DrawPipeArg1 DrawPipeArg2 DrawPipeArg4 on
- return
+ return thisbank
 
 _pfpixel_arg1_arg2_off
  pfpixel DrawPipeArg1 DrawPipeArg2 off
- return
+ return thisbank
 
 _pfpixel_arg1_arg4_off
  pfpixel DrawPipeArg1 DrawPipeArg4 off
- return
+ return thisbank
 
 
 
