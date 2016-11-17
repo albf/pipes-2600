@@ -7,7 +7,7 @@
  set romsize 8kSC
  const pfres=32
  set optimization inlinerand
- set debug cyclescore
+ ;set debug cyclescore
 
 
 
@@ -62,6 +62,9 @@
  dim currentPlayerX_index = var22 : dim currentPlayerY_index = var23
  dim currentWaterX_index = var24 : dim currentWaterY_index = var25
 
+ dim soundType = var26 : dim soundTime = var27
+ dim soundTemp = var28
+
  dim _sc1 = score
  dim _sc2 = score+1
  dim _sc3 = score+2
@@ -81,7 +84,7 @@ __StartRestart
  waterFlowTime1 = 45
  waterFlowTime2 = 0
  waterInitTime1 = 0
- waterInitTime2 = 4
+ waterInitTime2 = 3
  waterSpeedUpTime1 = 5
 
 
@@ -103,6 +106,8 @@ __StartLevel
  waterSpeedUp = 0
  hookFlow = 0
  hookDrawPipe = 5
+ soundType = 0
+ soundTime = 0
 
 
 
@@ -493,20 +498,58 @@ _resetEnd
  gosub _updateWaterTime
  if hookFlow > 0 then goto _noHookFlow_0
  if arg6 = 0 then goto _timeEnd
+ if arg6 <> 2 then goto _notInit
+
+ ; Turn on init ound
+ AUDC0 = 1
+ AUDF0 = 19
+ soundTemp = 10
+ soundType = 2
+ soundTime = 10
+ goto _timeEnd
+
+_notInit
  gosub _FlowWater_1
  goto _checkFlowResults
 
 _noHookFlow_0
  if hookFlow > 1 then goto _noHookFlow_1
  gosub _FlowWater_2
+
+ ; Turn on water flowing sound
+ AUDC0 = 4
+ AUDF0 = 9
+ soundTemp = 6
+ soundType = 1
+ soundTime = 3
+
  goto _timeEnd
 
 _noHookFlow_1
  gosub _FlowWater_3
 
 _checkFlowResults
- if arg6 = 1 then goto __StartRestart
- if arg6 = 2 then score = score + 100 : goto __StartLevel
+ if arg6 <> 1 then goto _resultNotLost
+
+ ; Start loosing sound variables
+ AUDV0 = 8
+ AUDC0 = 8
+ soundTime = 60
+ soundType = 7
+ soundTemp = 0
+ goto __End_Loop
+
+_resultNotLost
+ if arg6 <> 2 then goto _timeEnd
+
+ ; Start success sound variables
+ score = score + 100
+ AUDV0 = 9
+ AUDC0 = 4
+ AUDF0 = 14
+ soundTime = 75
+ soundType = 6
+ goto __End_Loop
 
 _timeEnd
 
@@ -516,9 +559,69 @@ _timeEnd
  NUSIZ0 = $07
  NUSIZ1 = $27
 
- drawscreen
 
+ ;***************************************************************
+ ; Sound
+ ;***************************************************************
+ if soundTime = 0 then soundType = 10 : AUDV0 = 0 else soundTime = soundTime - 1
+
+ if soundType > 2 then goto _sound_end
+ AUDV0 = soundTemp
+ soundTemp = soundTemp - 1
+ goto _sound_end
+
+_sound_end
+
+ drawscreen
  goto __Main_Loop
+
+
+
+; Separate loop for playing success or failure sound
+
+__End_Loop
+ if soundTime <> 0 then goto _stillPlays
+
+ AUDV0 = 0
+ if arg6 = 1 then goto __StartRestart
+ goto __StartLevel
+
+_stillPlays
+ if soundType <> 6 then goto _endFailSound
+
+ AUDC0 = 1
+ if soundTime = 75 then AUDF0 = 17 : AUDV0 = 9
+ if soundTime = 68 then AUDV0 = 0
+ if soundTime = 67 then AUDF0 = 15 : AUDV0 = 9
+ if soundTime = 60 then AUDV0 = 0
+ if soundTime = 59 then AUDF0 = 14 : AUDV0 = 9
+ if soundTime = 52 then AUDV0 = 0
+ if soundTime = 51 then AUDF0 = 13 : AUDV0 = 9
+ if soundTime = 31 then AUDV0 = 0
+ if soundTime = 30 then AUDF0 = 14 : AUDV0 = 9
+ if soundTime = 21 then AUDV0 = 0
+ if soundTime = 20 then AUDF0 = 13 : AUDV0 = 9
+
+ goto _endLoopDraw
+
+_endFailSound
+
+ if soundTemp > 30 then soundTemp = 0
+ COLUBK = soundTemp
+ AUDF0 = soundTemp
+ soundTemp = soundTemp + 1
+
+_endLoopDraw
+ soundTime = soundTime - 1
+
+ ; Color and Resize of player0 sprite
+ COLUP0 = $AE
+ COLUP1 = $EE
+ NUSIZ0 = $07
+ NUSIZ1 = $27
+
+ drawscreen
+ goto __End_Loop
 
 
 
@@ -548,6 +651,7 @@ end
  ; on arg6. It could be:
  ; 0: Nothing
  ; 1: Flow water
+ ; 2: Init
  ;***************************************************************
 
 _updateWaterTime
@@ -569,7 +673,10 @@ _updateWaterTime_noSpeedUp
 
  ; finished init time
  waterTimeIsInit = 0
- goto _Flow
+ waterTime1 = 0
+ waterTime2 = 0
+ arg6 = 2
+ return
 
 _updateWaterTime_Over
  if waterTime1 < waterFlowTime1 || waterTime2 < waterFlowTime2 then return
