@@ -6,7 +6,8 @@
  set kernel_options no_blank_lines
  set romsize 8kSC
  const pfres=32
- ;set debug cyclescore
+ set optimization inlinerand
+ set debug cyclescore
 
 
 
@@ -274,8 +275,26 @@ _findGoodEndPosition
  waterHeadY = aux_2 + 2
  pfpixel waterHeadX waterHeadY on
 
- ; Also print missile at water head start
- gosub _UpdateWaterMissile
+ ;***************************************************************
+ ; Start water missile: Draw missile on coordinates equivalent
+ ; to waterHeadX and waterHeadY. Only arg5 gets dirty.
+ ;***************************************************************
+
+ arg5 = waterHeadX
+ missile1x = 18
+_missile1xInit
+ missile1x = missile1x + 4
+ arg5 = arg5 - 1
+ if arg5 > 0 then goto _missile1xInit
+
+ arg5 = waterHeadY
+ missile1y = 2
+_missile1yInit
+ missile1y = missile1y + 3
+ arg5 = arg5 - 1
+ if arg5 > 0 then goto _missile1yInit
+
+ ;***************************************************************
 
 
 
@@ -407,7 +426,27 @@ _joy0firePressed
  arg1 = currentPlayerX_index
  arg2 = currentPlayerY_index
 
- gosub _isLocked
+
+ ;***************************************************************
+ ; Get current lock status pointed by arg1(x) and arg2(y).
+ ; arg4 and arg7 get dirty. result on arg3. Inlined due performance.
+ ; 0: not locked
+ ; >0: locked
+ ;***************************************************************
+
+ arg4 = 1
+ arg7 = arg2
+_isLocked_rolLoop
+ if arg7 = 0 then arg3 = isLocked[arg1] & arg4 : goto _isLocked_end
+ asm
+   ASL arg4
+end
+ arg7 = arg7 - 1
+ goto _isLocked_rolLoop
+_isLocked_end
+
+ ;***************************************************************
+
  if arg3 = 0 then goto _field_unlocked
 
  ; Check for waterSpeedUp, only if not yet on
@@ -463,7 +502,6 @@ _noHookFlow_0
  goto _timeEnd
 
 _noHookFlow_1
- ; hookFlow = 2
  gosub _FlowWater_3
 
 _checkFlowResults
@@ -495,41 +533,12 @@ _lockPosition
  arg4 = 1
  arg7 = arg2
 _lockPosition_rolLoop
- if arg7 = 0 then goto _lockPosition_rolEnd
+ if arg7 = 0 then isLocked[arg1] = isLocked[arg1] | arg4 : return
  asm
    ASL arg4
 end
  arg7 = arg7 - 1
  goto _lockPosition_rolLoop
-_lockPosition_rolEnd
-
- isLocked[arg1] = isLocked[arg1] | arg4
- return
-
-
-
- ;***************************************************************
- ; _isLocked Subroutine
- ; _isLocked will get current status pointed by arg1(x) and arg2(y).
- ; arg4 and arg7 get dirty. Returns on arg3:
- ; 0: not locked
- ; >0: locked
- ;***************************************************************
-
-_isLocked
- arg4 = 1
- arg7 = arg2
-_isLocked_rolLoop
- if arg7 = 0 then goto _isLocked_rolEnd
- asm
-   ASL arg4
-end
- arg7 = arg7 - 1
- goto _isLocked_rolLoop
-_isLocked_rolEnd
-
- arg3 = isLocked[arg1] & arg4
- return
 
 
 
@@ -543,11 +552,9 @@ _isLocked_rolEnd
 
 _updateWaterTime
  arg6 = 0
- if waterTime1 = 255 then goto _updateWaterTime_Time2
- waterTime1 = waterTime1 + 1
- goto _updateWaterTime_Check
+ if waterTime1 < 255 then waterTime1 = waterTime1 + 1 : goto _updateWaterTime_Check
 
-_updateWaterTime_Time2
+ ; waterTime1 reaches the limit
  waterTime1 = 0
  waterTime2 = waterTime2 + 1
 
@@ -617,30 +624,22 @@ _FlowWater_1
 _FlowWater_move
  hookFlow = 1
 
- if waterDirection > 0 then goto _FlowWater_not0
- waterHeadY = waterHeadY + 1
- return
-
-_FlowWater_not0
- if waterDirection > 1 then goto _FlowWater_not1
- waterHeadX = waterHeadX - 1
- return
-
-_FlowWater_not1
- if waterDirection > 2 then goto _FlowWater_not2
- waterHeadY = waterHeadY - 1
- return
-
-_FlowWater_not2
- waterHeadX = waterHeadX + 1
  return
 
 
 ; Start of second subroutine
 _FlowWater_2
- hookFlow = 2
+ if waterDirection = 0 then waterHeadY = waterHeadY + 1 : missile1y = missile1y + 3
+
+ if waterDirection = 1 then waterHeadX = waterHeadX - 1 : missile1x = missile1x - 4
+
+ if waterDirection = 2 then waterHeadY = waterHeadY - 1 : missile1y = missile1y - 3
+
+ if waterDirection = 3 then waterHeadX = waterHeadX + 1 : missile1x = missile1x + 4
+
  pfpixel waterHeadX waterHeadY on
- gosub _UpdateWaterMissile
+
+ hookFlow = 2
  return
 
 
@@ -686,29 +685,17 @@ _FlowWater_getDirection
  arg4 = 0
 
  arg5 = waterHeadY + 1
- if pfread(waterHeadX, arg5) then goto _FlowWater_notDown
- arg4 = arg4 + 1
- waterDirection = 0
+ if !pfread(waterHeadX, arg5) then arg4 = arg4 + 1 : waterDirection = 0
 
-_FlowWater_notDown
  arg5 = waterHeadX - 1
- if pfread(arg5, waterHeadY) then goto _FlowWater_notLeft
- arg4 = arg4 + 1
- waterDirection = 1
+ if !pfread(arg5, waterHeadY) then arg4 = arg4 + 1 : waterDirection = 1
 
-_FlowWater_notLeft
  arg5 = waterHeadY - 1
- if pfread(waterHeadX, arg5) then goto _FlowWater_notUp
- arg4 = arg4 + 1
- waterDirection = 2
+ if !pfread(waterHeadX, arg5) then arg4 = arg4 + 1 : waterDirection = 2
 
-_FlowWater_notUp
  arg5 = waterHeadX + 1
- if pfread(arg5, waterHeadY) then goto _FlowWater_notRight
- arg4 = arg4 + 1
- waterDirection = 3
+ if !pfread(arg5, waterHeadY) then arg4 = arg4 + 1 : waterDirection = 3
 
-_FlowWater_notRight
 
  ; Calculate 5-reminder, used to find out conflicts
  if waterDirection = 0 || waterDirection = 2 then arg5 = waterHeadY else arg5 = waterHeadX
@@ -717,30 +704,6 @@ _FlowWater_remainderInit
  goto _FlowWater_remainderInit
 _FlowWater_remainderDone
 
- return
-
-
-
- ;***************************************************************
- ; _UpdateWaterMissile Subroutine
- ; _UpdateWaterMissile will draw missile on coordinates equivalent
- ; to waterHeadX and waterHeadY. Only arg5 gets dirty.
- ;***************************************************************
-
-_UpdateWaterMissile
- arg5 = waterHeadX
- missile1x = 18
-_missile1xInit
- missile1x = missile1x + 4
- arg5 = arg5 - 1
- if arg5 > 0 then goto _missile1xInit
-
- arg5 = waterHeadY
- missile1y = 2
-_missile1yInit
- missile1y = missile1y + 3
- arg5 = arg5 - 1
- if arg5 > 0 then goto _missile1yInit
  return
 
 
@@ -768,31 +731,6 @@ _convertIndexToPlayfield
  arg1 = (arg1*5)+1
  arg2 = (arg2*5)+1
  return
-
-
-
- ;***************************************************************
- ; _convertPlayfieldToIndex Subroutine
- ; Oposite of _convertIndexToPlayfield. Returns on arg5(x) and arg6(y)
- ; arg3 and arg4 get dirty.
- ;***************************************************************
-
-_convertPlayfieldToIndex
- arg5 = 0
- arg6 = 0
- arg3 = arg1 - 1
- arg4 = arg2 - 1
-_convertPlayfieldToIndex_div1
- if arg3 < 5 then goto _convertPlayfieldToIndex_div2
- arg5 = arg5 + 1
- arg3 = arg3 - 5
- goto _convertPlayfieldToIndex_div1
-
-_convertPlayfieldToIndex_div2
- if arg4 < 5 then return
- arg6 = arg6 + 1
- arg4 = arg4 - 5
- goto _convertPlayfieldToIndex_div2
 
 
 
