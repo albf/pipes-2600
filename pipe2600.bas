@@ -213,8 +213,7 @@ end
  ;***************************************************************
 
  ; lets find pieces type
- arg4 = 4
- gosub _rand0toN
+ gosub _rand0to3
  waterDirection = arg3
  arg5 = arg3
 
@@ -235,8 +234,7 @@ end
  ; Find second and search a position until find
  ; a free and not so close.
 
- arg4 = 4
- gosub _rand0toN
+ gosub _rand0to3
  arg5 = arg3
 
 _findGoodEndPosition
@@ -314,7 +312,7 @@ _missile1yInit
 
 _init_pipe_loop
  arg4 = 7
- gosub _rand0toN
+ gosub _rand0to6
  nextPipe[aux_1] = arg3
 
  DrawPipeArg1 = aux_2
@@ -816,16 +814,65 @@ _FlowWater_remainderDone
 
 
  ;***************************************************************
- ; _rand0toN Subroutine
- ; _rand0toN will get a random number from 0 up to arg4-1
+ ; _rand0to3 Subroutine
+ ; _rand0to3 will get a random number from 0 up to 3
  ;***************************************************************
 
-_rand0toN
+_rand0to3
  arg3 = rand
-_rand0toN_loop
- if arg3 < arg4 then return thisbank
- arg3 = arg3 - arg4
- goto _rand0toN_loop
+ arg3 = arg3 & 3
+ return thisbank
+
+
+
+ ;***************************************************************
+ ; _rand0to6 Subroutine
+ ; _rand0to6 will get a random number from 0 up to 6.
+ ;***************************************************************
+
+_rand0to6
+ arg3 = rand
+ if arg3 >= 224 then arg3 = arg3 - 223
+ if arg3 >= 112 then arg3 = arg3 - 112
+ if arg3 >= 56 then arg3 = arg3 - 56
+ if arg3 >= 28 then arg3 = arg3 - 28
+ if arg3 >= 14 then arg3 = arg3 - 14
+ if arg3 >= 7 then arg3 = arg3 - 7
+ return thisbank
+
+
+
+ ;***************************************************************
+ ; _rand0to5 Subroutine
+ ; _rand0to5 will get a random number from 0 up to 5.
+ ;***************************************************************
+
+_rand0to5
+ arg3 = rand
+ if arg3 >= 192 then arg3 = arg3 - 192
+ if arg3 >= 96 then arg3 = arg3 - 96
+ if arg3 >= 48 then arg3 = arg3 - 48
+ if arg3 >= 24 then arg3 = arg3 - 24
+ if arg3 >= 12 then arg3 = arg3 - 12
+ if arg3 >= 6 then arg3 = arg3 - 6
+ return thisbank
+
+
+
+ ;***************************************************************
+ ; _rand0to4 Subroutine
+ ; _rand0to4 will get a random number from 0 up to 4.
+ ;***************************************************************
+
+_rand0to4
+ arg3 = rand
+ if arg3 >= 160 then arg3 = arg3 - 160
+ if arg3 >= 80 then arg3 = arg3 - 80
+ if arg3 >= 40 then arg3 = arg3 - 40
+ if arg3 >= 20 then arg3 = arg3 - 20
+ if arg3 >= 10 then arg3 = arg3 - 10
+ if arg3 >= 5 then arg3 = arg3 - 5
+ return thisbank
 
 
 
@@ -849,14 +896,12 @@ _convertIndexToPlayfield
 
 _randomValidPosition
 _randomValidPositionGetX
- arg4 = 6
- gosub _rand0toN
+ gosub _rand0to5
  if arg5 = 3 && arg3 = 5 then goto _randomValidPositionGetX
  if arg5 = 1 && arg3 = 0 then goto _randomValidPositionGetX
  arg1 = arg3
 _randomValidPositionGetY
- arg4 = 5
- gosub _rand0toN
+ gosub _rand0to4
  if arg5 = 0 && arg3 = 4 then goto _randomValidPositionGetY
  if arg5 = 2 && arg3 = 0 then goto _randomValidPositionGetY
 
@@ -968,16 +1013,19 @@ _DrawInitPipe_not2
  bank 2
 
  ;***************************************************************
- ; _rand0toN_bank2 Subroutine
- ; A copy of _rand0toN for performance/size reasons
+ ; _rand0to6_bank2 Subroutine
+ ; _rand0to6_bank2 copy, due performance
  ;***************************************************************
 
-_rand0toN_bank2
+_rand0to6_bank2
  arg3 = rand
-_rand0toN_bank2_loop
- if arg3 < arg4 then return thisbank
- arg3 = arg3 - arg4
- goto _rand0toN_bank2_loop
+ if arg3 >= 224 then arg3 = arg3 - 223
+ if arg3 >= 112 then arg3 = arg3 - 112
+ if arg3 >= 56 then arg3 = arg3 - 56
+ if arg3 >= 28 then arg3 = arg3 - 28
+ if arg3 >= 14 then arg3 = arg3 - 14
+ if arg3 >= 7 then arg3 = arg3 - 7
+ return thisbank
 
 
 
@@ -1592,8 +1640,7 @@ vblank_field_free
  DrawPipeArg3 = nextPipe[nextIndex]
 
  ; Update nextIndex and nextPipe
- arg4 = 7
- gosub _rand0toN_bank2
+ gosub _rand0to6_bank2
  nextPipe[nextIndex] = arg3
 
  nextPlayfieldxHolder = nextPlayfieldx
