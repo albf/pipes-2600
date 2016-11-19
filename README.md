@@ -6,7 +6,7 @@ A homebrew game for atari 2600 inspired by the dos classic Pipe Dreams.
 
 ## How to Play
 
-The game is separated by levels and, to complete each one, it's necessary to connect with pipes both start and end points. The start have a marker with a different color, and it's where the "water" will begin to flow. There is some initial time before it actually begin to flow, and the level is only completed when the water reach the final pipe. The next pipes are shown below the main grid, and a marker indicates its current position.
+The game is separated by levels and, to complete each one, it's necessary to connect with pipes both start and end points. The start have a marker with a different color, and it's where the "water" will begin to flow. There is some initial time before it actually begin to flow, and the level is only completed when the water reach the final pipe. The next pipes are shown below the main grid, and a marker indicates its current position. Each level got slightly faster (both initial and flow time), adding a little of difficulty.
 
 As many 2600 games, the game is score based, once the game is finished a new one with random positions will be created. The commands:
 
@@ -18,7 +18,7 @@ As many 2600 games, the game is score based, once the game is finished a new one
 
 ## Starting
 
-If you only want to test the game, you only need pipes-2600.bin file, and start with your favorite emulator (tested with stella and z26). If you have a Harmony or a Krokodile cart, you should be able to run the game (it uses the SuperChip ram, but those carts should be compatible).
+If you only want to test the game, you only need pipes2600.bin file, and start with your favorite emulator (tested with stella and z26). If you have a Harmony or a Krokodile cart, you should be able to run the game (it uses the SuperChip ram, but those carts should be compatible).
 
 ## Compiling
 
