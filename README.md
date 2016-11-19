@@ -2,7 +2,7 @@
 
 A homebrew game for atari 2600 inspired by the dos classic Pipe Dreams.
 
-![Alt Text](https://github.com/albf/pipes-2600/raw/master/path/to/sample.gif)
+![Alt Text](https://raw.githubusercontent.com/albf/pipes-2600/master/sample.gif)
 
 ## How to Play
 
