@@ -65,6 +65,8 @@
  dim soundType = var26 : dim soundTime = var27
  dim soundTemp = var28
 
+ dim levelCount = var29
+
  dim _sc1 = score
  dim _sc2 = score+1
  dim _sc3 = score+2
@@ -81,11 +83,8 @@ __StartRestart
  lastMoviment = 0
  score = 0
  scorecolor= 30
- waterFlowTime1 = 45
- waterFlowTime2 = 0
- waterInitTime1 = 0
- waterInitTime2 = 3
  waterSpeedUpTime1 = 5
+ levelCount = 0
 
 
 
@@ -108,6 +107,25 @@ __StartLevel
  hookDrawPipe = 5
  soundType = 0
  soundTime = 0
+ if levelCount <> 0 then goto _levelNot0
+ levelCount = levelCount + 1
+ waterFlowTime1 = 57
+ waterFlowTime2 = 0
+ waterInitTime1 = 0
+ waterInitTime2 = 3
+ goto _levelUpdateEnd
+
+_levelNot0
+ if levelCount > 16 then goto _levelUpdateEnd
+
+ levelCount = levelCount + 1
+
+ waterFlowTime1 = waterFlowTime1 - 2
+ if waterInitTime1 > 32 then waterInitTime1 = waterInitTime1 - 32 : goto _levelUpdateEnd
+ waterInitTime1 = 224
+ waterInitTime2 = waterInitTime2 - 1
+
+_levelUpdateEnd
 
 
 
